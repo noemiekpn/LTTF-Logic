@@ -18,13 +18,18 @@ int main(void) {
 	//------------------------------------------------------------
 	bool endGame = false;
 	bool render = true;
-	bool dirKeys[] = {false, false, false, false, false};
 
 	const int FPS = 60;
 	int state = MAIN;
 
+	//------------------------------------------------------------
+	//	GAME OBJECTS
+	//------------------------------------------------------------
 	Player link;
 	Map *lostWoods = MAP_LoadMap("map.txt");
+
+	PLR_InitializePlayer(link, GUI_GetImage(GUI_Link));
+	MAP_LoadObjects(lostWoods, "objects.txt");
 
 	//------------------------------------------------------------
 	//	ALLEGRO VARIABLES
@@ -33,25 +38,22 @@ int main(void) {
 	ALLEGRO_TIMER *timer = NULL;
 
 	//------------------------------------------------------------
-	//	INITIALIZE & TEST ALLEGRO LIBRARY
+	//	INITIALIZE ALLEGRO
 	//------------------------------------------------------------
 	if(!al_init()) {
 		printf("ERROR: Failed to initialize Allegro.\n");
 		return -1;
 	}
 
-	//------------------------------------------------------------
-	//	INITIALIZE ADD-ONS
-	//------------------------------------------------------------
 	GUI_InitializeAllegroAddons();
 	
 	//------------------------------------------------------------
-	//	INITIALIZE GUI & PLAYER
+	//	INITIALIZE GUI
 	//------------------------------------------------------------
 	GUI_CreateDisplay();
 	GUI_LoadImages();
 	GUI_LoadFonts();
-	PLR_InitializePlayer(link, GUI_GetImage(LINK));
+	
 	// Create timer
 	timer = al_create_timer(1.0 / FPS);
 	
@@ -108,10 +110,10 @@ int main(void) {
 
 			if(state == SOLVE) {
 				// Draw the map
-				GUI_DrawMap(lostWoods, GUI_GetImage(TILES));
+				GUI_DrawMap(lostWoods, GUI_GetImage(GUI_Tiles));
 
 				// Draw Link
-				PLR_DrawPlayer(link);
+				GUI_DrawPlayer(link);
 
 			}
 
@@ -129,6 +131,7 @@ int main(void) {
 	//------------------------------------------------------------
 	al_destroy_timer(timer);
 	al_destroy_event_queue(eventQueue);
+	MAP_DestroyMap(lostWoods);
 	GUI_DestroyFonts();
 	GUI_DestroyImages();
 	GUI_DestroyDisplay();

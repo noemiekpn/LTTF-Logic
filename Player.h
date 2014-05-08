@@ -1,7 +1,7 @@
 #ifndef PLAYER_H
 	#define	PLAYER_H 
 
-	typedef struct player {
+typedef struct player {
 	int energy;
 	int points;
 
@@ -22,7 +22,7 @@
 	int animationRow;
 
 	ALLEGRO_BITMAP *image;
-}	Player;
+} Player;
 
 //------------------------------------------------------------
 //	Initializes all player struct variables.
@@ -30,11 +30,6 @@
 //	image = player's image or sprite sheet
 //------------------------------------------------------------
 	void PLR_InitializePlayer(Player &player, ALLEGRO_BITMAP *image);
-
-//------------------------------------------------------------
-//	Draws player on screen.
-//------------------------------------------------------------
-	void PLR_DrawPlayer(Player &player);
 
 //------------------------------------------------------------
 //	Increments player's position numSpaces according to his

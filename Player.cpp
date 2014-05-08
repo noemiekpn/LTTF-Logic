@@ -2,7 +2,6 @@
 #include <allegro5\allegro_image.h>
 
 #include "Player.h"
-#include "GUI.h"
 
 #define PLR_SIZE 20
 
@@ -33,14 +32,6 @@ void PLR_InitializePlayer(Player &player, ALLEGRO_BITMAP *image) {
 	player.animationRow = 0;
 
 	player.image = image;
-}
-
-void PLR_DrawPlayer(Player &player) {
-	int frameX = (player.curFrame % player.animationColumns) * player.frameWidth;
-	int frameY = player.animationRow * player.frameHeight;
-
-	al_draw_bitmap_region(player.image, frameX, frameY, player.frameWidth, 
-		player.frameHeight, player.posX * GUI_GetTileSize(), player.posY * GUI_GetTileSize(), 0);
 }
 
 void PLR_MoveForward(Player &player) { 
