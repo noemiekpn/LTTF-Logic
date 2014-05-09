@@ -4,12 +4,13 @@
 	typedef struct map Map;
 
 	typedef enum {
-		MAP_Forest, MAP_Grass
+		MAP_TileForest, MAP_TileGrass
 	} MAP_Tiles;
 
 	typedef enum {
-		MAP_Hole, MAP_Monster, MAP_FakeSword, MAP_RealSword, MAP_Warp, MAP_Heart, MAP_Rupee
-	} MAP_Objects;
+		MAP_ObjHole, MAP_ObjMonster, MAP_ObjFakeSword, MAP_ObjRealSword, 
+		MAP_ObjWarp, MAP_ObjHeart, MAP_ObjRupee
+	} MAP_Objs;
 
 
 //------------------------------------------------------------
@@ -43,16 +44,19 @@
 	int MAP_GetMapHeight(Map *map);
 
 //------------------------------------------------------------
-//	Returns map table of terrains.
+//	Returns terrain type of a map position.
 //------------------------------------------------------------
-	char *MAP_GetMapTerrains(Map *map);
+	char MAP_GetPositionTerrain(Map *map, int pos);
 
 //------------------------------------------------------------
-//	Returns map table of visited points.
-//	0 - unvisited
-//	1 - visited
+//	Returns visit status of map position.
 //------------------------------------------------------------
-	char *MAP_GetMapVisited(Map *map);
+	bool MAP_GetPositionVisitStatus(Map *map, int pos);
+
+//------------------------------------------------------------
+//	Sets visit status of map position.
+//------------------------------------------------------------
+	void MAP_SetPositionVisitStatus(Map *map, int pos, bool status); 
 
 #endif	/* MAP_H */
 

@@ -4,24 +4,34 @@
 
 #include "Map.h"
 
+typedef struct position {
+	int numObjs;			// Number objects in this position
+	char terrain;			// Type of terrain
+	char object;			// Type of object in this position
+	
+	bool visited;			// If position has been visited
+} Position; 
+
 typedef struct object {
 	int type;
 	int amount;
-	int position;
 } Object;
 
 struct map {
 	int width;				// Width of map
 	int height;				// Height of map
-	char *terrain;			// Table of terrain types
-	char *visited;			// Table of visited positions
-	Object *objects;		// Table of map objects
-};
+	
+	Position *positions;	// Table of positions 
 
+	Object *objects;		// Vector of maps objects
+	int numObjects;			// Total number of objects in this map
+	int numTypes;			// Total number of types of objects in this map
+};
+	
 //------------------------------------------------------------
 //	AUX FUNCTIONS PROTOTYPES
 //------------------------------------------------------------
-void DisplayMapList(Map *map);
+	void DisplayMapInfo(Map *map);
 
 Map *MAP_LoadMap(char * fileName) {
 	Map *map;
@@ -66,21 +76,13 @@ Map *MAP_LoadMap(char * fileName) {
 	map->height = size;
 
 	//------------------------------------------------------------
-	//	CREATE TERRAIN TABLE
+	//	CREATE POSITION TABLE
 	//------------------------------------------------------------
-	map->terrain = (char*) malloc((unsigned int)(size * size));
+	map->positions = (Position*) malloc((size * size) * sizeof(Position));
         
-	if(map->terrain == NULL)
-        printf("Error while allocating matrix.\n");
+	if(map->positions == NULL)
+        printf("Error while allocating positions matrix.\n");
 
-	//------------------------------------------------------------
-	//	CREATE VISITED TABLE
-	//------------------------------------------------------------
-	map->visited = (char*) malloc((unsigned int)(size * size));
-        
-	if(map->visited == NULL)
-        printf("Error while allocating matrix.\n");
-	
 	//------------------------------------------------------------
 	//	FILLING TABLES
 	//------------------------------------------------------------
@@ -90,13 +92,15 @@ Map *MAP_LoadMap(char * fileName) {
 			
 		switch(byte) {
 		case 'f': // Forest
-			map->terrain[(i*map->width) + j] = MAP_Forest;
-			map->visited[(i*map->width) + j] = 0;
+			map->positions[(i*map->width) + j].terrain = MAP_TileForest;
+			map->positions[(i*map->width) + j].visited = false;
+			map->positions[(i*map->width) + j].numObjs = 0;
 			j++;
 			break;
 		case 'g': // Grass
-			map->terrain[(i*map->width) + j] = MAP_Grass;
-			map->visited[(i*map->width) + j] = 0;
+			map->positions[(i*map->width) + j].terrain = MAP_TileGrass;
+			map->positions[(i*map->width) + j].visited = false;
+			map->positions[(i*map->width) + j].numObjs = 0;
 			j++;
 			break;
 		case '\n':
@@ -111,7 +115,7 @@ Map *MAP_LoadMap(char * fileName) {
 		}
     }
 
-	/*DisplayMapList(map);*/
+	/*DisplayMapInfo(map);*/
 	fclose(f);
     return map;
 }
@@ -121,8 +125,6 @@ void MAP_DestroyMap(Map *map) {
 }
 
 void MAP_LoadObjects(Map *map, char *fileName) {
-	int numObjects = 0;		// Total number of objects to load 
-		
 	char type;				// Type of an object
 	int amount;				// Amount of objects of this type
 
@@ -133,61 +135,63 @@ void MAP_LoadObjects(Map *map, char *fileName) {
 	f = fopen(fileName, "r");
         
 	if(f == NULL){
-        printf("File not found.\n", fileName);
+        printf("ERROR: File not found.\n", fileName);
     }
 
+
+	map->numObjects = 0;
 	while(fscanf(f, "%c %d\n", &type, &amount) == 2) {
 		/*printf("Line: %c %d\n", type, amount);*/
-		numObjects += amount;
+		map->numObjects += amount;
 	}
 
-	/*printf("There is a total of %d objects in this map.\n", numObjects);*/
+	/*printf("There is a total of %d objects in this map.\n", map->numObjects);*/
 	rewind(f);
 	
 
 	//------------------------------------------------------------
-	//	CREATE TABLE OF OBJECTS
+	//	CREATE VECTOR OF OBJECTS
 	//------------------------------------------------------------
-	map->objects = (Object*) malloc(numObjects * sizeof(Object));
+	map->objects = (Object*) malloc(map->numObjects * sizeof(Object));
         
 	if(map->objects == NULL)
-        printf("Error while allocating matrix.\n");
+        printf("ERROR: Unable to allocate matrix.\n");
 	
 	int i = 0;
 	while(fscanf(f, "%c %d\n", &type, &amount) == 2) {
 		switch(type) {
 		case 'B': // Hole
-			map->objects[i].type = MAP_Hole;
+			map->objects[i].type = MAP_ObjHole;
 			map->objects[i].amount = amount;
 			i++;
 			break;
 		case 'E': // Enemy
-			map->objects[i].type = MAP_Monster;
+			map->objects[i].type = MAP_ObjMonster;
 			map->objects[i].amount = amount;
 			i++;
 			break;
 		case 'V': // Warp
-			map->objects[i].type = MAP_Warp;
+			map->objects[i].type = MAP_ObjWarp;
 			map->objects[i].amount = amount;
 			i++;
 			break;
 		case 'F': // Fake Master Sword
-			map->objects[i].type = MAP_FakeSword;
+			map->objects[i].type = MAP_ObjFakeSword;
 			map->objects[i].amount = amount;
 			i++;
 			break;
 		case 'M': // Real Master Sword
-			map->objects[i].type = MAP_RealSword;
+			map->objects[i].type = MAP_ObjRealSword;
 			map->objects[i].amount = amount;
 			i++;
 			break;
 		case 'C': // Heart
-			map->objects[i].type = MAP_Heart;
+			map->objects[i].type = MAP_ObjHeart;
 			map->objects[i].amount = amount;
 			i++;
 			break;
 		case 'R': // Rupee
-			map->objects[i].type = MAP_Rupee;
+			map->objects[i].type = MAP_ObjRupee;
 			map->objects[i].amount = amount;
 			i++;
 			break;
@@ -196,6 +200,7 @@ void MAP_LoadObjects(Map *map, char *fileName) {
 		}
 	}
 
+	map->numTypes = i;
 	/*printf("Total of objects loaded: %d\n", i);*/	
 	
 	/*for(int n = 0; n < i; n++) {
@@ -231,19 +236,46 @@ void MAP_LoadObjects(Map *map, char *fileName) {
 	fclose(f);
 }
 
-void MAP_PlaceObjectsRandom(Map *map) {
-	int position;
+void MAP_PlaceObjectsRandom(Map *map, char *fileName) {
+	FILE *objectsInfo;
+	
+	objectsInfo = fopen(fileName, "w");
+	
+	if(objectsInfo == NULL){
+        printf("ERROR: Unable to create file.\n", fileName);
+    }
+	
+	int pos;
 	
 	srand(time(NULL));
 
-	// Generate number between 0 and map size - 1;
-	one: position = rand() % (map->width * map->height - 1);
+	for(int i = 0; i < map->numTypes; i++) {
+		for(int j = 0; j < map->objects[i].amount; j++) {
+			// Generate number between 0 and map size - 1;
+			one: pos = rand() % (map->width * map->height - 1);
 
-	if(map->terrain[position] == MAP_Forest) {
-		printf("Ops... Can't place it here!\n");
-		goto one;
-	} else {
-		
+			// If this position is allowed...
+			if(map->positions[pos].terrain == MAP_TileGrass) {
+				
+				// If position is empty, no restrictions
+				if(map->positions[pos].numObjs == 0) {
+					map->positions[pos].object = map->objects[i].type;
+					map->positions[pos].numObjs++;
+				} else {
+					// Cannot have 2 objects of same type
+					if(map->positions[pos].object == map->objects[i].type) {
+						goto one;
+
+					// Cannot have combination of hole, monster, warp and real Master Sword
+					} else if(
+				
+				}
+			} else {
+				printf("Ops... Can't place it here!\n");
+				goto one;
+			}
+		}
+	
 	}
 
 }
@@ -256,18 +288,22 @@ int MAP_GetMapHeight(Map *map) {
 	return map->height;
 }
 
-char *MAP_GetMapTerrains(Map *map) {
-	return map->terrain;
+char MAP_GetPositionTerrain(Map *map, int pos) {
+	return map->positions[pos].terrain;
 }
 
-char *MAP_GetMapVisited(Map *map) {
-	return map->visited;
+bool MAP_GetPositionVisitStatus(Map *map, int pos) {
+	return map->positions[pos].visited;
+}
+
+void MAP_SetPositionVisitStatus(Map *map, int pos, bool status) {
+	map->positions[pos].visited = status;
 }
 
 //------------------------------------------------------------
 //	AUX FUNCTIONS
 //------------------------------------------------------------
-void DisplayMapList(Map *map) {
+void DisplayMapInfo(Map *map) {
 
 	int i, j = 0, 
 		points = 0;
@@ -275,7 +311,7 @@ void DisplayMapList(Map *map) {
 	printf("\n\nTERRAIN MAP\n\n");
 	for(i = 0; i < map->height; i++){
 		for(j = 0; j < map->width; j++){
-			printf("%d", map->terrain[(i*map->height) + j]);
+			printf("%d", map->positions[(i*map->height) + j].terrain);
 			points++;
 		}
 		printf("\n");
@@ -284,7 +320,7 @@ void DisplayMapList(Map *map) {
 	printf("\nVISITED MAP\n\n");
 	for(i = 0; i < map->height; i++){
 		for(j = 0; j < map->width; j++){
-			printf("%d", map->visited[(i*map->height) + j]);
+			printf("%d", map->positions[(i*map->height) + j].visited);
 		}
 		printf("\n");
 	}

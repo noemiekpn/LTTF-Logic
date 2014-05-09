@@ -28,7 +28,7 @@ int main(void) {
 	Player link;
 	Map *lostWoods = MAP_LoadMap("map.txt");
 
-	PLR_InitializePlayer(link, GUI_GetImage(GUI_Link));
+	PLR_InitializePlayer(link);	
 	MAP_LoadObjects(lostWoods, "objects.txt");
 
 	//------------------------------------------------------------
@@ -109,12 +109,8 @@ int main(void) {
 			}
 
 			if(state == SOLVE) {
-				// Draw the map
-				GUI_DrawMap(lostWoods, GUI_GetImage(GUI_Tiles));
-
-				// Draw Link
-				GUI_DrawPlayer(link);
-
+				// Draw the background
+				GUI_DrawMainBackground(lostWoods, link);
 			}
 
 			if(state == END) {

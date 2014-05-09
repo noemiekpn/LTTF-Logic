@@ -5,8 +5,8 @@ typedef struct player {
 	int energy;
 	int points;
 
-	int posX,				// Line, i.e. y in map
-		posY;				// Column, i.e x in map
+	int posX,				// Column, i.e. "j"
+		posY;				// Line, i.e "i"
 	
 	int direction;			// Direction player is facing
 	int speedX, speedY;
@@ -21,15 +21,12 @@ typedef struct player {
 	int animationDirection;
 	int animationRow;
 
-	ALLEGRO_BITMAP *image;
 } Player;
 
 //------------------------------------------------------------
 //	Initializes all player struct variables.
-//
-//	image = player's image or sprite sheet
 //------------------------------------------------------------
-	void PLR_InitializePlayer(Player &player, ALLEGRO_BITMAP *image);
+	void PLR_InitializePlayer(Player &player);
 
 //------------------------------------------------------------
 //	Increments player's position numSpaces according to his

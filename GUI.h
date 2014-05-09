@@ -1,13 +1,14 @@
 #include <allegro5\allegro.h>
-#include <allegro5\allegro_image.h>
+
 
 #include "Map.h"
 #include "Player.h"
 
 // Obs.: Tiles corresponds to Lost Woods tileset, which includes forest, grass, hole and warp (in this order)
 typedef enum {
-	GUI_Title, GUI_Tiles, GUI_Link, GUI_Monster, GUI_Rupee, GUI_Heart, GUI_Swords, GUI_Pendants
-} GUI_Images;
+	GUI_ImgTitle, GUI_ImgTiles, GUI_ImgLink, GUI_ImgMonster, 
+	GUI_ImgRupee, GUI_ImgHeart, GUI_ImgSwords, GUI_ImgPendants
+} GUI_Img;
 
 const int tileSize = 20;	// 20 x 20 pixel tiles
 const int screenWidth = 1200;
@@ -21,7 +22,7 @@ const int screenHeight = 840;
 	void GUI_InitializeAllegroAddons();
 
 //------------------------------------------------------------
-//	Creates game window (using screenWidth and screenHeight).
+//	Creates game window.
 //------------------------------------------------------------
 	void GUI_CreateDisplay();
 
@@ -56,17 +57,11 @@ const int screenHeight = 840;
 	void GUI_DrawMainTitle();
 
 //------------------------------------------------------------
-//	Draws map on screen.
+//	Draws map and player on screen.
 //------------------------------------------------------------
-	void GUI_DrawMap(Map *map, ALLEGRO_BITMAP *image);
+	void GUI_DrawMainBackground(Map *map, Player &player);
 
 //------------------------------------------------------------
-//	Draws player on screen.
+//	Returns game display.
 //------------------------------------------------------------
-	void GUI_DrawPlayer(Player &player);
-
-int GUI_GetScreenHeight();
-int GUI_GetScreenWidth();
-
-ALLEGRO_BITMAP *GUI_GetImage(int index);
-ALLEGRO_DISPLAY *GUI_GetDisplay();
+	ALLEGRO_DISPLAY *GUI_GetDisplay();
