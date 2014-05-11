@@ -30,7 +30,7 @@ int main(void) {
 
 	PLR_InitializePlayer(link);	
 	MAP_LoadObjects(lostWoods, "objects.txt");
-
+	MAP_PlaceObjectsRandom(lostWoods);
 	//------------------------------------------------------------
 	//	ALLEGRO VARIABLES
 	//------------------------------------------------------------

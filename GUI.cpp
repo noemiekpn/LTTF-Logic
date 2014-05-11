@@ -24,6 +24,7 @@
 //------------------------------------------------------------
 	void DrawMap(Map *map, ALLEGRO_BITMAP *image);
 	void DrawPlayer(Player &player, ALLEGRO_BITMAP *image);
+	void DrawObjects(Map *map);
 
 void GUI_InitializeAllegroAddons() {
 	al_init_image_addon();
@@ -61,10 +62,10 @@ void GUI_LoadImages() {
 
 		// Mask out background
 		al_convert_mask_to_alpha(images[GUI_ImgLink], al_map_rgb(0, 128, 128));			// Cyan
-		al_convert_mask_to_alpha(images[GUI_ImgMonster], al_map_rgb(153, 153, 102));		// Beige
+		al_convert_mask_to_alpha(images[GUI_ImgMonster], al_map_rgb(153, 153, 102));	// Beige
 		al_convert_mask_to_alpha(images[GUI_ImgPendants], al_map_rgb(153, 153, 102));
 		al_convert_mask_to_alpha(images[GUI_ImgRupee], al_map_rgb(153, 153, 102));
-		al_convert_mask_to_alpha(images[GUI_ImgHeart], al_map_rgb(255, 0, 255));			// Magenta
+		al_convert_mask_to_alpha(images[GUI_ImgHeart], al_map_rgb(255, 0, 255));		// Magenta
 		al_convert_mask_to_alpha(images[GUI_ImgSwords], al_map_rgb(255, 0, 255));			
 	} else {
 		printf("ERROR: Allegro add-ons have not been initialized.\n");
@@ -126,6 +127,7 @@ void GUI_DrawMainBackground(Map *map, Player &player) {
 
 	DrawMap(map, images[GUI_ImgTiles]);
 	DrawPlayer(player, images[GUI_ImgLink]);
+	DrawObjects(map);
 
 	// Set player's initial position to a visited position
 	MAP_SetPositionVisitStatus(map, player.posY * mapColumns + player.posX, true);
@@ -181,6 +183,49 @@ void DrawPlayer(Player &player, ALLEGRO_BITMAP *image) {
 	int frameX = (player.curFrame % player.animationColumns) * player.frameWidth;
 	int frameY = player.animationRow * player.frameHeight;
 
-	al_draw_bitmap_region(image, frameX, frameY, player.frameWidth, 
-		player.frameHeight, player.posX * tileSize, player.posY * tileSize, 0);
+	if(initAddons) {
+		al_draw_bitmap_region(image, frameX, frameY, player.frameWidth, 
+			player.frameHeight, player.posX * tileSize, player.posY * tileSize, 0);
+	} else {
+		printf("ERROR: Allegro add-ons have not been initialized.\n");
+		return;
+	}
+}
+
+void DrawObjects(Map *map) {
+	int size = MAP_GetMapWidth(map) * MAP_GetMapHeight(map);
+	int mapColumns = MAP_GetMapWidth(map);
+
+	if(initAddons) {
+		for(int column = 0; column < size; column++) {
+			int numObjs = MAP_GetPositionNumObjects(map, column);
+
+			for(int n = 0; n < MAP_GetPositionNumObjects(map, column); n++) {
+				switch(MAP_GetObjectType(MAP_GetPositionObjects[n])) {
+				case MAP_ObjRealSword:
+					al_draw_bitmap_region(images[GUI_ImgSwords], 0 * tileSize, 0, tileSize, tileSize, 
+						tileSize * (column % mapColumns), tileSize * (column / mapColumns), 0);
+					break;
+				case MAP_ObjFakeSword:
+					al_draw_bitmap_region(images[GUI_ImgSwords], 1 * tileSize, 0, tileSize, tileSize, 
+						tileSize * (column % mapColumns), tileSize * (column / mapColumns), 0);
+					break;
+				case MAP_ObjHeart:
+					al_draw_bitmap(images[GUI_ImgHeart], tileSize * (column % mapColumns), tileSize * (column / mapColumns), 0);
+					break;
+				case MAP_ObjHole:
+					al_draw_bitmap_region(images[GUI_ImgTiles], 2 * tileSize, 0, tileSize, tileSize, 
+						tileSize * (column % mapColumns), tileSize * (column / mapColumns), 0);
+					break;
+				case MAP_ObjWarp:
+					al_draw_bitmap_region(images[GUI_ImgTiles], 3 * tileSize, 0, tileSize, tileSize, 
+						tileSize * (column % mapColumns), tileSize * (column / mapColumns), 0);
+					break;
+				}
+			}
+		}
+	} else {
+		printf("ERROR: Allegro add-ons have not been initialized.\n");
+		return;
+	}
 }

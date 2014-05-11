@@ -4,18 +4,18 @@
 
 #include "Map.h"
 
+struct object {
+	int type;
+	int amount;
+};
+
 typedef struct position {
 	int numObjs;			// Number objects in this position
 	char terrain;			// Type of terrain
-	char object;			// Type of object in this position
+	Object objects[4];		// Type of object in this position
 	
 	bool visited;			// If position has been visited
 } Position; 
-
-typedef struct object {
-	int type;
-	int amount;
-} Object;
 
 struct map {
 	int width;				// Width of map
@@ -32,6 +32,7 @@ struct map {
 //	AUX FUNCTIONS PROTOTYPES
 //------------------------------------------------------------
 	void DisplayMapInfo(Map *map);
+	bool AllowObjectsCombination(int object1, int object2);
 
 Map *MAP_LoadMap(char * fileName) {
 	Map *map;
@@ -236,49 +237,60 @@ void MAP_LoadObjects(Map *map, char *fileName) {
 	fclose(f);
 }
 
-void MAP_PlaceObjectsRandom(Map *map, char *fileName) {
-	FILE *objectsInfo;
-	
-	objectsInfo = fopen(fileName, "w");
-	
-	if(objectsInfo == NULL){
-        printf("ERROR: Unable to create file.\n", fileName);
-    }
-	
+void MAP_PlaceObjectsRandom(Map *map) {
 	int pos;
 	
 	srand(time(NULL));
 
 	for(int i = 0; i < map->numTypes; i++) {
-		for(int j = 0; j < map->objects[i].amount; j++) {
+		for(int j = 0; j < map->objects[i].amount;) {
 			// Generate number between 0 and map size - 1;
-			one: pos = rand() % (map->width * map->height - 1);
+			pos = rand() % (map->width * map->height - 1);
 
-			// If this position is allowed...
+			// If this position is grass...
 			if(map->positions[pos].terrain == MAP_TileGrass) {
 				
 				// If position is empty, no restrictions
 				if(map->positions[pos].numObjs == 0) {
-					map->positions[pos].object = map->objects[i].type;
+					map->positions[pos].objects[0].type = map->objects[i].type;
 					map->positions[pos].numObjs++;
-				} else {
-					// Cannot have 2 objects of same type
-					if(map->positions[pos].object == map->objects[i].type) {
-						goto one;
+					printf("Position %d now has %d objects of type %d.\n", pos, map->positions[pos].numObjs, map->positions[pos].objects[0].type);
+					j++;
 
-					// Cannot have combination of hole, monster, warp and real Master Sword
-					} else if(
-				
 				}
-			} else {
+				
+				// If position is occupied...
+				else if(map->positions[pos].numObjs > 0 && map->positions[pos].numObjs < 4) {
+					// ... check if the combination of objects is possible 
+					bool allow = true;
+					for(int k = 0; k < map->positions[pos].numObjs; k++) {
+						if(!AllowObjectsCombination(map->positions[pos].objects[k].type, map->objects[i].type)) {
+							allow = false;
+						}
+					}
+					if(allow) {
+						map->positions[pos].objects[map->positions[pos].numObjs + 1].type = map->objects[i].type;
+						map->positions[pos].numObjs++;
+						printf("Position %d now has %d objects: \n", pos, map->positions[pos].numObjs);
+						for(int k = 0; k < map->positions[pos].numObjs; k++) {
+							printf("Object %d: %d\n", k, map->positions[pos].objects[k].type);
+						}	
+						j++;
+					}
+				}					
+				// If position is full...
+				else {
+					printf("Ops... These objects can't be together!\n");
+				}
+			} /* End of grass if */
+			
+			// If position is forest...
+			else {
 				printf("Ops... Can't place it here!\n");
-				goto one;
 			}
-		}
-	
-	}
-
-}
+		} /* End of second for */
+	} /* End of first for */
+} /* End of function */
 
 int MAP_GetMapWidth(Map *map) {
 	return map->width;
@@ -298,6 +310,18 @@ bool MAP_GetPositionVisitStatus(Map *map, int pos) {
 
 void MAP_SetPositionVisitStatus(Map *map, int pos, bool status) {
 	map->positions[pos].visited = status;
+}
+
+int MAP_GetPositionNumObjects(Map *map, int pos) {
+	return map->positions[pos].numObjs;
+}
+
+Object *MAP_GetPositionObjects(Map *map, int pos) {
+	return map->positions[pos].objects;
+}
+
+int MAP_GetObjectType(Object obj) {
+	return obj.type;
 }
 
 //------------------------------------------------------------
@@ -326,4 +350,75 @@ void DisplayMapInfo(Map *map) {
 	}
 
    	printf("\n\n# OF POINTS: %d\n", points);
+}
+
+bool AllowObjectsCombination(int object1, int object2) {
+	switch(object1) {
+		case MAP_ObjHole:
+		case MAP_ObjMonster:
+		case MAP_ObjWarp:
+		case MAP_ObjRealSword:
+			switch(object2) {
+				case MAP_ObjHole:
+				case MAP_ObjMonster:
+				case MAP_ObjWarp:
+				case MAP_ObjRealSword:
+					return false;
+				case MAP_ObjFakeSword:
+				case MAP_ObjHeart:
+				case MAP_ObjRupee:
+					return true;
+				default:
+					printf("Could not recognize type of object.\n");
+					return false;
+			}
+		case MAP_ObjFakeSword:
+			switch(object2) {
+				case MAP_ObjHole:
+				case MAP_ObjMonster:
+				case MAP_ObjWarp:
+				case MAP_ObjRealSword:
+				case MAP_ObjHeart:
+				case MAP_ObjRupee:
+					return true;
+				case MAP_ObjFakeSword:
+					return false;
+				default:
+					printf("Could not recognize type of object.\n");
+					return false;
+			}
+		case MAP_ObjHeart:
+			switch(object2) {
+				case MAP_ObjHole:
+				case MAP_ObjMonster:
+				case MAP_ObjWarp:
+				case MAP_ObjRealSword:
+				case MAP_ObjFakeSword:
+				case MAP_ObjRupee:
+					return true;
+				case MAP_ObjHeart:
+					return false;
+				default:
+					printf("Could not recognize type of object.\n");
+					return false;
+			}
+		case MAP_ObjRupee:
+			switch(object2) {
+				case MAP_ObjHole:
+				case MAP_ObjMonster:
+				case MAP_ObjWarp:
+				case MAP_ObjRealSword:
+				case MAP_ObjFakeSword:
+				case MAP_ObjHeart:
+					return true;
+				case MAP_ObjRupee:
+					return false;
+				default:
+					printf("Could not recognize type of object.\n");
+					return false;
+			}				
+		default:
+			printf("Could not recognize type of object.\n");
+			return false;
+	}
 }

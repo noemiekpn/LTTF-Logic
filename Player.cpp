@@ -1,6 +1,3 @@
-#include <allegro5\allegro.h>
-#include <allegro5\allegro_image.h>
-
 #include "Player.h"
 
 #define PLR_SIZE 20
@@ -10,7 +7,7 @@
 //------------------------------------------------------------
 void UpdatePlayerAnimation(Player &player);
 
-void PLR_InitializePlayer(Player &player, ALLEGRO_BITMAP *image) {
+void PLR_InitializePlayer(Player &player) {
 	player.energy = 100;
 	player.points = 0;
 	
@@ -27,11 +24,9 @@ void PLR_InitializePlayer(Player &player, ALLEGRO_BITMAP *image) {
 	player.frameHeight = PLR_SIZE;
 	player.frameWidth = PLR_SIZE;
 
-	player.animationColumns = 7;
-	player.animationDirection = 7;
-	player.animationRow = 0;
-
-	player.image = image;
+	player.animationColumns = 6;
+	player.animationDirection = 1;
+	player.animationRow = 0;		// Begins facing south
 }
 
 void PLR_MoveForward(Player &player) { 

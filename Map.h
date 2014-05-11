@@ -2,6 +2,7 @@
 	#define	MAP_H 
 
 	typedef struct map Map;
+	typedef struct object Object;
 
 	typedef enum {
 		MAP_TileForest, MAP_TileGrass
@@ -14,8 +15,8 @@
 
 
 //------------------------------------------------------------
-//	Reads map file, identifies important points and sets 
-//	terrain weights.
+//	Reads map file and creates a map, setting its positions
+//	to unvisited, with zero objects, as well as its terrains.
 //
 //	fileName = file location
 //------------------------------------------------------------
@@ -32,6 +33,16 @@
 //	fileName = file location
 //------------------------------------------------------------
 	void MAP_LoadObjects(Map *map, char *fileName);
+
+//------------------------------------------------------------
+//	Places objects randomly on map positions according to
+//	these rules:
+//	1. Objects can only be placed on grass;
+//	2. One position cannot have two objects of same type;
+//	3. One position cannot have combination of hole, monster,
+//	warp and real Master Sword.
+//------------------------------------------------------------
+	void MAP_PlaceObjectsRandom(Map *map);
 
 //------------------------------------------------------------
 //	Returns width of map (number of columns).
@@ -56,7 +67,22 @@
 //------------------------------------------------------------
 //	Sets visit status of map position.
 //------------------------------------------------------------
-	void MAP_SetPositionVisitStatus(Map *map, int pos, bool status); 
+	void MAP_SetPositionVisitStatus(Map *map, int pos, bool status);
+
+//------------------------------------------------------------
+//	Returns number of objects in a position.
+//------------------------------------------------------------
+	int MAP_GetPositionNumObjects(Map *map, int pos);
+
+//------------------------------------------------------------
+//	Returns vector of objects in a position.
+//------------------------------------------------------------
+	Object *MAP_GetPositionObjects(Map *map, int pos);
+
+//------------------------------------------------------------
+//	Returns the type of a map object.
+//------------------------------------------------------------
+	int MAP_GetObjectType(Object obj);
 
 #endif	/* MAP_H */
 
