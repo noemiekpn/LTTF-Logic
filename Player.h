@@ -1,14 +1,15 @@
 #ifndef PLAYER_H
 	#define	PLAYER_H 
 
+#include "Sensor.h"
+
 typedef struct player {
 	int energy;
 	int points;
 
-	int posX,				// Column, i.e. "j"
-		posY;				// Line, i.e "i"
+	int posX,					// Column, i.e. "j"
+		posY;					// Line, i.e "i"
 	
-	int direction;			// Direction player is facing
 	int speedX, speedY;
 
 	int maxFrame;
@@ -19,7 +20,7 @@ typedef struct player {
 	
 	int animationColumns;
 	int animationDirection;
-	int animationRow;
+	int animationRow;			// Direction player is facing
 
 } Player;
 
@@ -54,8 +55,8 @@ typedef struct player {
 	void PLR_TurnRight(Player &player);
 
 //------------------------------------------------------------
-//	Animates player sword attack. Also decrements player's 
-//	points by 5.
+//	Decrements player's points by 5 and decrements player's
+//	energy by 10. Monster is always killed.
 //------------------------------------------------------------	
 	void PLR_AttackEnemy(Player &player);
 
@@ -66,8 +67,7 @@ typedef struct player {
 	void PLR_CollectHeart(Player &player);
 
 //------------------------------------------------------------
-//	Increments player's points by 10 and increment's player's
-//	energy by 50.
+//	Increments player's points by 10.
 //------------------------------------------------------------	
 	void PLR_CollectRupee(Player &player);
 

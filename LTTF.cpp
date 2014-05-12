@@ -4,6 +4,7 @@
 ------------------------------------------------------------*/
 #include <stdio.h>
 #include <time.h>
+#include <SWI-cpp.h>
 
 #include "GUI.h"
 #include "Map.h"

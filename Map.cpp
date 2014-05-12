@@ -4,16 +4,17 @@
 
 #include "Map.h"
 
-struct object {
+#define MAX_OBJS 4
+
+typedef struct object {
 	int type;
 	int amount;
-};
+} Object;
 
 typedef struct position {
 	int numObjs;			// Number objects in this position
 	char terrain;			// Type of terrain
-	Object objects[4];		// Type of object in this position
-	
+	int objs[MAX_OBJS];		// Array of object types in this position
 	bool visited;			// If position has been visited
 } Position; 
 
@@ -33,6 +34,7 @@ struct map {
 //------------------------------------------------------------
 	void DisplayMapInfo(Map *map);
 	bool AllowObjectsCombination(int object1, int object2);
+	int ConvertType(char type);
 
 Map *MAP_LoadMap(char * fileName) {
 	Map *map;
@@ -136,7 +138,7 @@ void MAP_LoadObjects(Map *map, char *fileName) {
 	f = fopen(fileName, "r");
         
 	if(f == NULL){
-        printf("ERROR: File not found.\n", fileName);
+        printf("ERROR: File not found.\n");
     }
 
 
@@ -237,13 +239,40 @@ void MAP_LoadObjects(Map *map, char *fileName) {
 	fclose(f);
 }
 
+void MAP_PlaceObjects(Map *map, char *fileName) {
+	int x, y;	// Object's coordinates from file 
+	char type;	// Object's type from tile
+	
+	FILE *f;
+	f = fopen(fileName, "r");
+        
+	if(f == NULL){
+        printf("ERROR: File not found.\n");
+    }
+
+	int i = 0;
+	int mapColumns = map->width;
+
+	while(fscanf(f, "%d %d %c\n", &x, &y, &type) == 3) {
+		printf("Place object type %c on (%d, %d)\n", type, x, y);
+		map->numObjects++;
+	
+		map->positions[y * mapColumns + x].numObjs++;
+		map->positions[y * mapColumns + x].objs[i] = ConvertType(type);
+		i++;
+	}
+}
+
 void MAP_PlaceObjectsRandom(Map *map) {
 	int pos;
+	int total = 0;	// To check total of objects placed
 	
 	srand(time(NULL));
 
 	for(int i = 0; i < map->numTypes; i++) {
 		for(int j = 0; j < map->objects[i].amount;) {
+			/*printf("Placing %d/%d objects of type %d...\n", j + 1, map->objects[i].amount, map->objects[i].type);*/
+
 			// Generate number between 0 and map size - 1;
 			pos = rand() % (map->width * map->height - 1);
 
@@ -252,10 +281,11 @@ void MAP_PlaceObjectsRandom(Map *map) {
 				
 				// If position is empty, no restrictions
 				if(map->positions[pos].numObjs == 0) {
-					map->positions[pos].objects[0].type = map->objects[i].type;
+					map->positions[pos].objs[0] = map->objects[i].type;
 					map->positions[pos].numObjs++;
-					printf("Position %d now has %d objects of type %d.\n", pos, map->positions[pos].numObjs, map->positions[pos].objects[0].type);
+					/*printf("Position %d now has %d objects of type %d.\n", pos, map->positions[pos].numObjs, map->positions[pos].objs[0]);*/
 					j++;
+					total++;
 
 				}
 				
@@ -264,32 +294,35 @@ void MAP_PlaceObjectsRandom(Map *map) {
 					// ... check if the combination of objects is possible 
 					bool allow = true;
 					for(int k = 0; k < map->positions[pos].numObjs; k++) {
-						if(!AllowObjectsCombination(map->positions[pos].objects[k].type, map->objects[i].type)) {
+						if(!AllowObjectsCombination(map->positions[pos].objs[k], map->objects[i].type)) {
 							allow = false;
 						}
 					}
 					if(allow) {
-						map->positions[pos].objects[map->positions[pos].numObjs + 1].type = map->objects[i].type;
+						map->positions[pos].objs[map->positions[pos].numObjs + 1] = map->objects[i].type;
 						map->positions[pos].numObjs++;
-						printf("Position %d now has %d objects: \n", pos, map->positions[pos].numObjs);
+						/*printf("Position %d now has %d objects: \n", pos, map->positions[pos].numObjs);
 						for(int k = 0; k < map->positions[pos].numObjs; k++) {
-							printf("Object %d: %d\n", k, map->positions[pos].objects[k].type);
-						}	
+							printf("Object %d: %d\n", k, map->positions[pos].objs[k]);
+						}*/	
 						j++;
+						total++;
 					}
 				}					
 				// If position is full...
 				else {
-					printf("Ops... These objects can't be together!\n");
+					/*printf("Ops... These objects can't be together!\n");*/
 				}
 			} /* End of grass if */
 			
 			// If position is forest...
 			else {
-				printf("Ops... Can't place it here!\n");
+				/*printf("Ops... Can't place it here!\n");*/
 			}
 		} /* End of second for */
 	} /* End of first for */
+
+	printf("Total of objects placed: %d\n", total);
 } /* End of function */
 
 int MAP_GetMapWidth(Map *map) {
@@ -316,12 +349,8 @@ int MAP_GetPositionNumObjects(Map *map, int pos) {
 	return map->positions[pos].numObjs;
 }
 
-Object *MAP_GetPositionObjects(Map *map, int pos) {
-	return map->positions[pos].objects;
-}
-
-int MAP_GetObjectType(Object obj) {
-	return obj.type;
+int *MAP_GetPositionObjects(Map *map, int pos) {
+	return map->positions[pos].objs;
 }
 
 //------------------------------------------------------------
@@ -422,3 +451,22 @@ bool AllowObjectsCombination(int object1, int object2) {
 			return false;
 	}
 }
+
+int ConvertType(char type) {
+	switch(type) {
+	case 'B':
+		return MAP_ObjHole;
+	case 'E':
+		return MAP_ObjMonster;
+	case 'F':
+		return MAP_ObjFakeSword;
+	case 'M':
+		return MAP_ObjRealSword;
+	case 'V':
+		return MAP_ObjWarp;
+	case 'C':
+		return MAP_ObjHeart;
+	case 'R':
+		return MAP_ObjRupee;
+	}
+};

@@ -49,18 +49,42 @@
 --------------------------------------------------------------------------------
 	BIBLIOTECAS
 --------------------------------------------------------------------------------		
-	Neste projeto foi utilizada a biblioteca:
-	- Biblioteca Allegro 5 
+	Neste projeto foram utilizadas as bibliotecas:
+	- Allegro 5
+	- SWI-Prolog C++
 
 	------------------------------------------------------------
 		ALLEGRO 5
 	------------------------------------------------------------
-	Baixe a biblioteca Allegro 5 no link a seguir:
+	Baixe Allegro 5 no link a seguir:
 	https://www.allegro.cc/files/
 	
 	Escolha o arquivo .ZIP de acordo com seu compilador.
 	O guia de instalação pode ser encontrado em:
 	
 	http://wiki.allegro.cc/index.php?title=Allegro_5#Installing_Tutorials
+	
+	------------------------------------------------------------
+		SWI-PROLOG
+	------------------------------------------------------------
+	Baixe SWI-Prolog para C++ 5 no link a seguir:
+	http://www.swi-prolog.org/download/stable
+
+	Para configurá-lo no ambiente Windows, acrescente o diretório bin do
+	programa à variável PATH do sistema.
+	
+	Para configurá-lo no Visual Studio:
+	1. Acrescente o diretório include nas propriedades do projeto, em:
+		
+		C/C++ > General > Additional Include Directories
+	
+	2. Acrescente o diretório lib nas propriedades do projeto, em:
+		
+		Linker > General > Additional Library Directories
+	
+	3. Acrescente libswipl.dll.a nas propriedades do projeto, em:
+		
+		Linker > Input > Additional Dependencies
+	
 --------------------------------------------------------------------------------
 	

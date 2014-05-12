@@ -1,14 +1,7 @@
 #include <allegro5\allegro.h>
 
-
 #include "Map.h"
 #include "Player.h"
-
-// Obs.: Tiles corresponds to Lost Woods tileset, which includes forest, grass, hole and warp (in this order)
-typedef enum {
-	GUI_ImgTitle, GUI_ImgTiles, GUI_ImgLink, GUI_ImgMonster, 
-	GUI_ImgRupee, GUI_ImgHeart, GUI_ImgSwords, GUI_ImgPendants
-} GUI_Img;
 
 const int tileSize = 20;	// 20 x 20 pixel tiles
 const int screenWidth = 1200;

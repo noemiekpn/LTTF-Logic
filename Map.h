@@ -2,7 +2,6 @@
 	#define	MAP_H 
 
 	typedef struct map Map;
-	typedef struct object Object;
 
 	typedef enum {
 		MAP_TileForest, MAP_TileGrass
@@ -33,6 +32,14 @@
 //	fileName = file location
 //------------------------------------------------------------
 	void MAP_LoadObjects(Map *map, char *fileName);
+
+//------------------------------------------------------------
+//	Reads objects coordinates file and places these objects
+//	in respective positions on map.
+//
+//	fileName = file location
+//------------------------------------------------------------
+	void MAP_PlaceObjects(Map *map, char *fileName);
 
 //------------------------------------------------------------
 //	Places objects randomly on map positions according to
@@ -75,14 +82,9 @@
 	int MAP_GetPositionNumObjects(Map *map, int pos);
 
 //------------------------------------------------------------
-//	Returns vector of objects in a position.
+//	Returns array of objects in a position.
 //------------------------------------------------------------
-	Object *MAP_GetPositionObjects(Map *map, int pos);
-
-//------------------------------------------------------------
-//	Returns the type of a map object.
-//------------------------------------------------------------
-	int MAP_GetObjectType(Object obj);
+	int *MAP_GetPositionObjects(Map *map, int pos);
 
 #endif	/* MAP_H */
 

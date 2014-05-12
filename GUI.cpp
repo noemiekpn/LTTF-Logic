@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <allegro5\allegro_primitives.h>
 #include <allegro5\allegro_font.h>
@@ -10,6 +11,27 @@
 #define NUM_IMGS 8
 #define MAP_SIZE 42
 
+/**
+  * Image notes:
+  *	1. Tiles image corresponds to Lost Woods tileset, which includes forest, grass, hole and warp, in this order
+  * 2. Swords image corresponds to real Master Sword and fake Master Sword, in this order
+  * 3. Pendants image corresponds to Pendant of Courage (green), Pendant of Power (blue) and Pendant of Wisdom (red), in this order
+  */
+typedef enum {
+	GUI_ImgTitle, GUI_ImgTiles, GUI_ImgLink, GUI_ImgMonster, 
+	GUI_ImgRupee, GUI_ImgHeart, GUI_ImgSwords, GUI_ImgPendants
+} GUI_Img;
+
+typedef struct dynamicImage {
+	int maxFrame;
+	int curFrame;
+	int frameCount;
+	int frameDelay;
+	int frameWidth, frameHeight;
+
+	ALLEGRO_BITMAP *image;
+} DynamicImage;
+
 //------------------------------------------------------------
 //	GLOBAL VARIABLES
 //------------------------------------------------------------
@@ -19,12 +41,19 @@
 	ALLEGRO_DISPLAY *display = NULL;
 	ALLEGRO_FONT* retganon;
 
+	DynamicImage *dynHoarder = (DynamicImage*) malloc(sizeof(DynamicImage));
+	DynamicImage *dynRupee = (DynamicImage*) malloc(sizeof(DynamicImage));
 //------------------------------------------------------------
 //	AUX FUNCTIONS PROTOTYPES
 //------------------------------------------------------------
+	void SetDynamicImage(DynamicImage *img, int maxFrame, int curFrame, int frameCount, int frameDelay, 
+		int frameWidth, int frameHeight, ALLEGRO_BITMAP *image);
 	void DrawMap(Map *map, ALLEGRO_BITMAP *image);
 	void DrawPlayer(Player &player, ALLEGRO_BITMAP *image);
 	void DrawObjects(Map *map);
+	void DrawHoarder(int posX, int posY);
+	void DrawRupee(int posX, int posY);
+	void UpdateAnimation(DynamicImage *img);
 
 void GUI_InitializeAllegroAddons() {
 	al_init_image_addon();
@@ -66,7 +95,12 @@ void GUI_LoadImages() {
 		al_convert_mask_to_alpha(images[GUI_ImgPendants], al_map_rgb(153, 153, 102));
 		al_convert_mask_to_alpha(images[GUI_ImgRupee], al_map_rgb(153, 153, 102));
 		al_convert_mask_to_alpha(images[GUI_ImgHeart], al_map_rgb(255, 0, 255));		// Magenta
-		al_convert_mask_to_alpha(images[GUI_ImgSwords], al_map_rgb(255, 0, 255));			
+		al_convert_mask_to_alpha(images[GUI_ImgSwords], al_map_rgb(255, 0, 255));
+
+		// Set dynamic images
+		SetDynamicImage(dynHoarder, 3, 0, 0, 40, tileSize, tileSize, images[GUI_ImgMonster]);
+		SetDynamicImage(dynRupee, 3, 0, 0, 60, tileSize, tileSize, images[GUI_ImgRupee]);
+
 	} else {
 		printf("ERROR: Allegro add-ons have not been initialized.\n");
 		return;
@@ -77,6 +111,9 @@ void GUI_DestroyImages() {
 	for(int i = 0; i < NUM_IMGS; i++) {
 		al_destroy_bitmap(images[i]);
 	}
+
+	free(dynHoarder);
+	free(dynRupee);
 }
 
 void GUI_LoadFonts(){
@@ -129,7 +166,7 @@ void GUI_DrawMainBackground(Map *map, Player &player) {
 	DrawPlayer(player, images[GUI_ImgLink]);
 	DrawObjects(map);
 
-	// Set player's initial position to a visited position
+	// Set player's position to a visited position
 	MAP_SetPositionVisitStatus(map, player.posY * mapColumns + player.posX, true);
 
 	// If position is unvisited, a "fog" will cover
@@ -162,6 +199,17 @@ ALLEGRO_DISPLAY *GUI_GetDisplay() {
 //------------------------------------------------------------
 //	AUX FUNCTIONS
 //------------------------------------------------------------
+void SetDynamicImage(DynamicImage *img, int maxFrame, int curFrame, int frameCount, int frameDelay, 
+	int frameWidth, int frameHeight, ALLEGRO_BITMAP *image) {
+	img->maxFrame = maxFrame;
+	img->curFrame = curFrame;
+	img->frameCount = frameCount;
+	img->frameDelay = frameDelay;
+	img->frameWidth = frameWidth;
+	img->frameHeight = frameHeight;
+	img->image = image;
+}
+
 void DrawMap(Map *map, ALLEGRO_BITMAP *image) {
 	int size = MAP_GetMapWidth(map) * MAP_GetMapHeight(map);
 	int mapColumns = MAP_GetMapWidth(map);
@@ -196,12 +244,16 @@ void DrawObjects(Map *map) {
 	int size = MAP_GetMapWidth(map) * MAP_GetMapHeight(map);
 	int mapColumns = MAP_GetMapWidth(map);
 
+
+
 	if(initAddons) {
 		for(int column = 0; column < size; column++) {
 			int numObjs = MAP_GetPositionNumObjects(map, column);
+			int *objs = MAP_GetPositionObjects(map, column);
 
-			for(int n = 0; n < MAP_GetPositionNumObjects(map, column); n++) {
-				switch(MAP_GetObjectType(MAP_GetPositionObjects[n])) {
+			for(int n = 0; n < numObjs; n++) {
+				switch(objs[n]){
+				// Static images
 				case MAP_ObjRealSword:
 					al_draw_bitmap_region(images[GUI_ImgSwords], 0 * tileSize, 0, tileSize, tileSize, 
 						tileSize * (column % mapColumns), tileSize * (column / mapColumns), 0);
@@ -221,11 +273,52 @@ void DrawObjects(Map *map) {
 					al_draw_bitmap_region(images[GUI_ImgTiles], 3 * tileSize, 0, tileSize, tileSize, 
 						tileSize * (column % mapColumns), tileSize * (column / mapColumns), 0);
 					break;
+				// Dynamic images
+				case MAP_ObjMonster:
+					DrawHoarder(tileSize * (column % mapColumns), tileSize * (column / mapColumns));
+					break;
+				case MAP_ObjRupee:
+					DrawRupee(tileSize * (column % mapColumns), tileSize * (column / mapColumns));
+					break;
 				}
-			}
-		}
+			}		
+		} 
 	} else {
 		printf("ERROR: Allegro add-ons have not been initialized.\n");
 		return;
+	}
+}
+	 
+void DrawHoarder(int posX, int posY) {
+	if(initAddons) {
+		UpdateAnimation(dynHoarder);
+		
+		al_draw_bitmap_region(dynHoarder->image, dynHoarder->curFrame * dynHoarder->frameWidth, 0, 
+			dynHoarder->frameWidth, dynHoarder->frameHeight, posX, posY, 0);
+	} else {
+		printf("ERROR: Allegro add-ons have not been initialized.\n");
+		return;
+	}
+}
+
+void DrawRupee(int posX, int posY) {
+	if(initAddons) {
+		UpdateAnimation(dynRupee);
+		
+		al_draw_bitmap_region(dynRupee->image, dynRupee->curFrame * dynRupee->frameWidth, 0,
+			dynRupee->frameWidth, dynRupee->frameHeight, posX, posY, 0);
+	} else {
+		printf("ERROR: Allegro add-ons have not been initialized.\n");
+		return;
+	}
+}
+
+void UpdateAnimation(DynamicImage *img) {
+	if(++(img->frameCount) >= img->frameDelay) {
+		if(++(img->curFrame) >= img->maxFrame) {
+			img->curFrame = 0; // Reset to start	
+		}
+
+		img->frameCount = 0;
 	}
 }
