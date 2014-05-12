@@ -1786,17 +1786,17 @@ attlink(X):- not(link(_)),assert(link(X)),assert(visited(X)),allAdjacent(X,A,A,C
 attlink(X):- not(link(_)),assert(link(X)),assert(visited(X)),allAdjacent(X,A,B,C,D),setPending(A),setPending(B),setPending(C),setPending(D).
 
 %Other Times
-attlink(X):- link(A) , A\=X , assert(safe(A)), retract(link(A)) , assert(link(X)).
-walk(X):- attlink(X),(assert(visited(X)),retract(pending(X))),allAdjacent(X,A,B,C,D),setPending(A),setPending(B),setPending(C),setPending(D).
+attlink(X):- link(A) , A\=X ,setSafe(A),(visited(A);assert(visited(A))), retract(link(A)) , assert(link(X)).
+walk(X):- not(wood(X)),attlink(X),(pending(X),retract(pending(X))),allAdjacent(X,A,B,C,D),(visited(A);setPending(A)),(visited(B);setPending(B)),(visited(C);setPending(C)),(visited(D);setPending(D)).
 takeRupee(THIS):- link(THIS), rupee(THIS), retract(rupeebrightness(THIS)).
 takeSword(THIS):- link(THIS), msword(THIS), retract(brightness(THIS)).
 takeHeart(THIS):- link(THIS), heart(THIS), retract(fairy(THIS)),add(50).
-attackMonster(THIS):- monster(THIS),link(X), adjacent(THIS,X), assert(monsterKilled(THIS)), sub(10).
+attackMonster(THIS):- monster(THIS),link(X), adjacent(THIS,X), assert(monsterKilled(THIS)), sub(10). %Tirar sensores devido a esse monstro
 
 %---------------------------------------%
 % About Point properties
 
-%Correlations
+%------Correlations------%
 atleft(point(CA,L),point(CB,L)):- CA is (CB-1),point(CA,L).
 atright(point(CA,L),point(CB,L)):- CA is (CB+1),point(CA,L).
 attop(point(C,LA),point(C,LB)):- LA is (LB-1),point(C,LA).
@@ -1805,7 +1805,7 @@ adjacent(X,Y):- atleft(X,Y) ; atright(X,Y) ; attop(X,Y) ; atbottom(X,Y).
 allAdjacent(THIS,A,B,C,D):-adjacent(A,THIS), adjacent(B,THIS),adjacent(C,THIS),adjacent(D,THIS),A\=B,A\=C,A\=D,B\=C,B\=D,C\=D.
 allAdjacent(THIS,A,_,C,D):-adjacent(A,THIS), adjacent(C,THIS),adjacent(D,THIS),A\=C,A\=D,C\=D.
 allAdjacent(THIS,A,_,C,_):-adjacent(A,THIS), adjacent(C,THIS),A\=C.
-%Inside
+%------Inside------%
 :-dynamic hasdistortion/1.
 :-dynamic fairy/1.
 :-dynamic hasbreeze/1.
@@ -1817,17 +1817,40 @@ allAdjacent(THIS,A,_,C,_):-adjacent(A,THIS), adjacent(C,THIS),A\=C.
 :-dynamic won/1.
 :-dynamic visited/1.
 :-dynamic pending/1.
-setPending(THIS):- not(visited(THIS)),not(pending(THIS)),assert(pending(THIS)). %add not(pending) to avoid repetition
-setSafe(THIS):- not(visited(THIS)),assert(safe(THIS)).
+%Important Sets 
+setWood(THIS):- assert(wood(THIS)).
+setPending(THIS):- not(visited(THIS)),(pending(THIS);assert(pending(THIS))). %add (pending();) to avoid repetition
+
+%Perceptions
+setSafe(THIS):- not(wood(THIS)),(safe(THIS);assert(safe(THIS))).
+setFairy(THIS):- assert(fairy(THIS)).
+setRbrightness(THIS):- assert(rupeebrightness(THIS)).
+setNoise(THIS):- assert(hasnoise(THIS)).
+setDistortion(THIS):- assert(hasnoise(THIS)).
+setBreeze(THIS):- assert(hasbreeze(THIS)).
 noSense(THIS):- allAdjacent(THIS,A,B,C,D),setSafe(A),setSafe(B),setSafe(C),setSafe(D).
-monster(THIS):- hasnoise(X), hasnoise(Y), X\=Y, adjacent(THIS,X), adjacent(THIS,Y), not(monsterKilled(THIS)).
+
+%About monster
+cantHaveMonster(THIS):- wood(THIS);safe(THIS);not(THIS).% ;vortex(THIS);hole(THIS) Can generate infinite loop
+maybeMonster(THIS):- hasnoise(X), adjacent(THIS,X), not(monster(THIS)), not(cantHaveMonster(THIS)).
+monster(THIS):- hasnoise(X), adjacent(THIS,X), not(cantHaveMonster(THIS)), allAdjacent(X,THIS,B,C,D), cantHaveMonster(B),cantHaveMonster(C),cantHaveMonster(D).
+monster(THIS):- hasnoise(X), hasnoise(Y), X\=Y, adjacent(THIS,X), adjacent(THIS,Y),cantHaveMonster(THIS),not(monsterKilled(THIS)).
+
+%About Hole
+cantHaveHole(THIS):- wood(THIS);safe(THIS);not(THIS).%;vortex(THIS);monster(THIS)
+hole(THIS):- hasbreeze(X), adjacent(THIS,X), not(cantHaveHole(THIS)), allAdjacent(X,THIS,B,C,D), cantHaveHole(B),cantHaveHole(C),cantHaveHole(D).
 hole(THIS):- hasbreeze(X) , hasbreeze(Y), X\=Y , adjacent(THIS,X) , adjacent(THIS,Y).
+
+%About Vortex
+cantHaveVortex(THIS):- wood(THIS);safe(THIS);not(THIS). %;hole(THIS);monster(THIS)
+vortex(THIS):- hasdistortion(X), adjacent(THIS,X), not(cantHaveVortex(THIS)), allAdjacent(X,THIS,B,C,D), cantHaveVortex(B),cantHaveVortex(C),cantHaveVortex(D).
 vortex(THIS):- hasdistortion(X), hasdistortion(Y), X\=Y, adjacent(THIS,X), adjacent(THIS,Y).
+
 msword(THIS):-brightness(THIS).
 heart(THIS):-fairy(THIS).
 rupee(THIS):-rupeebrightness(THIS).
 unsafe(THIS):- hole(THIS); vortex(THIS);monster(THIS).
-maybeUnsafe(THIS):- not(unsafe(THIS)),not(monster(THIS)), not(safe(THIS)), adjacent(X,THIS), (hasdistortion(X) ; hasbreeze(X) ; hasnoise(X) ).
+maybeUnsafe(THIS):- not(unsafe(THIS)), not(safe(THIS)), adjacent(X,THIS), (hasdistortion(X) ; hasbreeze(X) ; hasnoise(X) ).
 
 %---------------------------------------%
 % Action Chooser
@@ -1836,19 +1859,19 @@ maybeUnsafe(THIS):- not(unsafe(THIS)),not(monster(THIS)), not(safe(THIS)), adjac
 best_action(game_over_lost):- not(alive(link)).
 best_action(game_over_won):- won(game).
 
-%Critical Life and Known Heart
-best_action(takeHeart(X)):- link(X),heart(X), energy(E),E=10. 
-best_action(walk(X)):- energy(Y),Y=10, heart(X).
-
 %At treasure site 
 best_action(takeRupee(X)):- link(X), rupee(X).
 best_action(takeSword(X)):- link(X), msword(X).
 best_action(takeHeart(X)):- link(X), heart(X), energy(Y), Y=<50. %Only valid if below 50
-best_action(attackMonster(X)):- energy(E),E>10,link(Y), adjacent(X,Y), monster(X).
 
-%There is nothing else -KOWN- better to try, so:
-best_action(walk(X)):- safe(X), not(visited(X)),link(Y),adjacent(Y,X). %Explore the World close
-best_action(walk(X)):- safe(X), not(visited(X)). %Explore the World far
+%Critical Life and Known Heart
+best_action(takeHeart(X)):- link(X),heart(X), energy(E),E=10. 
+best_action(walk(X)):- energy(Y),Y=10, heart(X).
+
+
+%Explore with safety
+best_action(walk(X)):- pending(X), safe(X),link(Y),adjacent(Y,X). %Explore the World 1 tile close
+best_action(walk(X)):- pending(X), safe(X). %Explore the World far
 
 %Know monster and no where safe not visited to go
 best_action(walk(X)):- monster(Y), adjacent(X,Y), safe(X), energy(E),E>10.
@@ -1857,6 +1880,11 @@ best_action(walk(X)):- monster(Y), adjacent(X,Y), safe(X), energy(E),E>10.
 %There is absolutely nothing else to do, let's risk
 best_action(walk(X)):-pending(X),maybeUnsafe(X).
 
+%Trapped, vortex is way out
+best_action(walk(X)):- vortex(X),not(visited(X)).
+
+%Really, nothing to do / cant answer
+best_action(game_over_dilema):-alive(link).
 
 %---------------------------------------%
 % After Action Readings
@@ -1865,3 +1893,4 @@ inHole(THIS):- link(THIS), assert(hole(THIS)),retract(alive(link)).
 inVortex(THIS,GO):- link(THIS), assert(vortex(THIS)),assert(link(GO)).
 withMonster(THIS):- link(THIS),assert(monster(THIS)),retract(alive(link)).
 realSword(THIS):- link(THIS),assert(won(game)).
+killedMonster(THIS):- assert(monsterKilled(THIS)),setSafe(THIS),setPending(THIS) .
