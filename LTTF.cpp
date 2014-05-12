@@ -21,7 +21,7 @@ int main(void) {
 	bool render = true;
 
 	const int FPS = 60;
-	int state = MAIN;
+	int state = END;
 
 	//------------------------------------------------------------
 	//	GAME OBJECTS
@@ -81,7 +81,8 @@ int main(void) {
 			if(event.keyboard.keycode == ALLEGRO_KEY_ENTER) {
 				state = SOLVE;
 			} else if(event.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
-				endGame = true;
+				if(state == END)
+					endGame = true;
 			} else if(event.keyboard.keycode == ALLEGRO_KEY_LEFT) {
 				PLR_TurnLeft(link);
 			} else if(event.keyboard.keycode == ALLEGRO_KEY_RIGHT) {
@@ -90,6 +91,8 @@ int main(void) {
 				PLR_MoveForward(lostWoods, link);
 			} else if(event.keyboard.keycode == ALLEGRO_KEY_C) {
 				PLR_CollectHeart(lostWoods, link);
+			} else if(event.keyboard.keycode == ALLEGRO_KEY_SPACE) {
+				PLR_FallIntoWarp(lostWoods, link);
 			}
 		} /* End of key down if */
 
@@ -104,8 +107,11 @@ int main(void) {
 		//	GAME UPDATE
 		//------------------------------------------------------------
 		else if(event.type == ALLEGRO_EVENT_TIMER) {
+			if(!link.alive || link.realSword) {
+				state = END;
+			}
+
 			render = true;
-			
 		} /* End of timer if */
 		
 		//------------------------------------------------------------ 
@@ -124,7 +130,7 @@ int main(void) {
 			}
 
 			if(state == END) {
-				endGame = true;
+				GUI_DrawEndResults(link);
 			}
 
 			al_flip_display();	

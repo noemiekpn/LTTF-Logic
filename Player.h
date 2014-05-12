@@ -8,6 +8,7 @@ typedef struct player {
 	int points;
 
 	bool alive;
+	bool realSword;
 
 	int enemiesKilled;
 	int heartsCollected;

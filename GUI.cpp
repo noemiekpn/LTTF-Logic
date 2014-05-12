@@ -8,7 +8,7 @@
 
 #include "GUI.h"
 
-#define NUM_IMGS 8
+#define NUM_IMGS 9
 #define MAP_SIZE 42
 
 /**
@@ -19,7 +19,7 @@
   */
 typedef enum {
 	GUI_ImgTitle, GUI_ImgTiles, GUI_ImgLink, GUI_ImgMonster, 
-	GUI_ImgRupee, GUI_ImgHeart, GUI_ImgSwords, GUI_ImgPendants
+	GUI_ImgRupee, GUI_ImgHeart, GUI_ImgSwords, GUI_ImgPedestal, GUI_ImgDeadLink
 } GUI_Img;
 
 typedef struct dynamicImage {
@@ -88,12 +88,13 @@ void GUI_LoadImages() {
 		images[GUI_ImgRupee] = al_load_bitmap("rupee.png");
 		images[GUI_ImgHeart]= al_load_bitmap("heart.png");
 		images[GUI_ImgSwords]= al_load_bitmap("swords.png");
-		images[GUI_ImgPendants] = al_load_bitmap("pendants.png");
+		images[GUI_ImgPedestal] = al_load_bitmap("pedestal.png");
+		images[GUI_ImgDeadLink] = al_load_bitmap("dead_link.png");
 
 		// Mask out background
 		al_convert_mask_to_alpha(images[GUI_ImgLink], al_map_rgb(0, 128, 128));			// Cyan
+		al_convert_mask_to_alpha(images[GUI_ImgDeadLink], al_map_rgb(0, 128, 128));	
 		al_convert_mask_to_alpha(images[GUI_ImgMonster], al_map_rgb(153, 153, 102));	// Beige
-		al_convert_mask_to_alpha(images[GUI_ImgPendants], al_map_rgb(153, 153, 102));
 		al_convert_mask_to_alpha(images[GUI_ImgRupee], al_map_rgb(153, 153, 102));
 		al_convert_mask_to_alpha(images[GUI_ImgHeart], al_map_rgb(255, 0, 255));		// Magenta
 		al_convert_mask_to_alpha(images[GUI_ImgSwords], al_map_rgb(255, 0, 255));
@@ -186,6 +187,26 @@ void GUI_DrawMainBackground(Map *map, Player &player) {
 	}
 }
 
+void GUI_DrawEndResults(Player &player) {
+	if(initAddons) {
+		if(!player.alive) {
+			al_draw_bitmap(images[GUI_ImgDeadLink], 535, 306, 0);
+			al_draw_text(retganon, al_map_rgb(255, 255, 255), 600, 235, ALLEGRO_ALIGN_CENTER, "GAME OVER");
+			al_draw_textf(retganon, al_map_rgb(255, 255, 255), 600, 545, ALLEGRO_ALIGN_CENTER, "Final score: %d", player.points);
+		} else if (player.realSword) {
+			al_draw_bitmap(images[GUI_ImgPedestal], 0, 0, 0);
+			al_draw_text(retganon, al_map_rgb(255, 255, 255), 480, 348, ALLEGRO_ALIGN_LEFT, "Link, it is extraordinary");
+			al_draw_text(retganon, al_map_rgb(255, 255, 255), 480, 400, ALLEGRO_ALIGN_LEFT, "that you won the master sword");
+			al_draw_text(retganon, al_map_rgb(255, 255, 255), 480, 452, ALLEGRO_ALIGN_LEFT, "that makes evil retreat...");
+			al_draw_textf(retganon, al_map_rgb(255, 255, 255), 480, 660, ALLEGRO_ALIGN_LEFT, "Final score: %d", player.points);
+		}
+
+	} else {
+		printf("ERROR: Allegro add-ons have not been initialized.\n");
+		return;
+	}
+}
+
 int GUI_GetScreenHeight() {
 	return screenHeight;
 }
@@ -213,25 +234,30 @@ void SetDynamicImage(DynamicImage *img, int maxFrame, int curFrame, int frameCou
 }
 
 void DrawInfo(Map *map, Player &player) {
-	al_draw_rounded_rectangle(858, 64, 1185, 283, 10, 10, al_map_rgb(255, 255, 255), 2); 
-	al_draw_rounded_rectangle(858, 394, 1185, 824, 10, 10, al_map_rgb(255, 255, 255), 2);
+	if(initAddons) {
+		al_draw_rounded_rectangle(858, 64, 1185, 283, 10, 10, al_map_rgb(255, 255, 255), 2); 
+		al_draw_rounded_rectangle(858, 394, 1185, 824, 10, 10, al_map_rgb(255, 255, 255), 2);
 
-	al_draw_text(retganon, al_map_rgb(255, 255, 255), 858, 20, ALLEGRO_ALIGN_LEFT, "Link");
-	al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 82, ALLEGRO_ALIGN_CENTER, "- ENERGY -");
-	al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 132, ALLEGRO_ALIGN_CENTER, "%d of 100", player.energy);
-	al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 188, ALLEGRO_ALIGN_CENTER, "- COST -");
-	al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 231, ALLEGRO_ALIGN_CENTER, "%d", player.points);
+		al_draw_text(retganon, al_map_rgb(255, 255, 255), 858, 20, ALLEGRO_ALIGN_LEFT, "Link");
+		al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 82, ALLEGRO_ALIGN_CENTER, "- ENERGY -");
+		al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 132, ALLEGRO_ALIGN_CENTER, "%d of 100", player.energy);
+		al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 188, ALLEGRO_ALIGN_CENTER, "- COST -");
+		al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 231, ALLEGRO_ALIGN_CENTER, "%d", player.points);
 
-	al_draw_text(retganon, al_map_rgb(255, 255, 255), 858, 354, ALLEGRO_ALIGN_LEFT, "Map");
-	al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 411, ALLEGRO_ALIGN_CENTER, "- HOARDERS -");
-	al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 458, ALLEGRO_ALIGN_CENTER, "%d of %d", player.enemiesKilled, MAP_GetMapObjectAmount(map, MAP_ObjMonster));
-	al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 515, ALLEGRO_ALIGN_CENTER, "- HEARTS -");
-	al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 560, ALLEGRO_ALIGN_CENTER, "%d of %d", player.heartsCollected, MAP_GetMapObjectAmount(map, MAP_ObjHeart));
-	al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 618, ALLEGRO_ALIGN_CENTER, "- RUPEES -");
-	al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 667, ALLEGRO_ALIGN_CENTER, "%d of %d", player.rupeesCollected, MAP_GetMapObjectAmount(map, MAP_ObjRupee));
-	al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 720, ALLEGRO_ALIGN_CENTER, "- SWORDS -");
-	al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 768, ALLEGRO_ALIGN_CENTER, "%d of %d", player.swordsCollected, 
-		MAP_GetMapObjectAmount(map, MAP_ObjFakeSword) + MAP_GetMapObjectAmount(map, MAP_ObjRealSword));
+		al_draw_text(retganon, al_map_rgb(255, 255, 255), 858, 354, ALLEGRO_ALIGN_LEFT, "Map");
+		al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 411, ALLEGRO_ALIGN_CENTER, "- HOARDERS -");
+		al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 458, ALLEGRO_ALIGN_CENTER, "%d of %d", player.enemiesKilled, MAP_GetMapObjectAmount(map, MAP_ObjMonster));
+		al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 515, ALLEGRO_ALIGN_CENTER, "- HEARTS -");
+		al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 560, ALLEGRO_ALIGN_CENTER, "%d of %d", player.heartsCollected, MAP_GetMapObjectAmount(map, MAP_ObjHeart));
+		al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 618, ALLEGRO_ALIGN_CENTER, "- RUPEES -");
+		al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 667, ALLEGRO_ALIGN_CENTER, "%d of %d", player.rupeesCollected, MAP_GetMapObjectAmount(map, MAP_ObjRupee));
+		al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 720, ALLEGRO_ALIGN_CENTER, "- SWORDS -");
+		al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 768, ALLEGRO_ALIGN_CENTER, "%d of %d", player.swordsCollected, 
+			MAP_GetMapObjectAmount(map, MAP_ObjFakeSword) + MAP_GetMapObjectAmount(map, MAP_ObjRealSword));
+	} else {
+		printf("ERROR: Allegro add-ons have not been initialized.\n");
+		return;
+	}
 } 
 
 void DrawMap(Map *map, ALLEGRO_BITMAP *image) {

@@ -1,6 +1,7 @@
 #include <allegro5\allegro.h>
 
-#include "Map.h"
+#include "MapPublicInfo.h"
+#include "MapPrivateInfo.h"
 #include "Player.h"
 
 const int tileSize = 20;	// 20 x 20 pixel tiles
@@ -53,6 +54,12 @@ const int screenHeight = 840;
 //	Draws map and player on screen.
 //------------------------------------------------------------
 	void GUI_DrawMainBackground(Map *map, Player &player);
+
+//------------------------------------------------------------
+//	Draws final results, whether Link died or found the
+//	real Master Sword. Always shows final cost.
+//------------------------------------------------------------
+	void GUI_DrawEndResults(Player &player);
 
 //------------------------------------------------------------
 //	Returns game display.

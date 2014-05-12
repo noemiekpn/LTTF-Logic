@@ -393,13 +393,15 @@ int *MAP_GetPositionObjects(Map *map, int pos) {
 	return map->positions[pos].objs;
 }
 
-void MAP_DeletePositionObject(Map *map, int pos, int object) {
+bool MAP_DeletePositionObject(Map *map, int pos, int object) {
 	int objIndex = SearchPositionObject(map, pos, object);
 	
-	if(objIndex < 0)
+	if(objIndex < 0) {
 		printf("Object not found. Deletion not accomplished.\n");
-	else
+		return false;
+	} else {
 		map->positions[pos].objs[objIndex] = -1;
+	}
 }
 
 void MAP_GenerateRandomWarpDestiny(Map *map, int *posX, int *posY) {

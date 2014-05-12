@@ -14,6 +14,7 @@ void PLR_InitializePlayer(Player &player) {
 	player.points = 0;
 	
 	player.alive = true;
+	player.realSword = false;
 
 	player.enemiesKilled = 0;
 	player.heartsCollected = 0;
@@ -81,50 +82,72 @@ void PLR_TurnRight(Player &player) {
 }
 
 void PLR_AttackEnemy(Map *map, Player &player) {
+	bool killed;
+	
 	// Delete monster from map
-	/*MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + player.posX, MAP_ObjMonster);*/
-
+	switch(player.animationRow) {	
+	case SOUTH:
+		killed = MAP_DeletePositionObject(map, (player.posY + 1) * MAP_GetMapWidth(map) + player.posX, MAP_ObjMonster);
+		break;
+	case NORTH:
+		killed = MAP_DeletePositionObject(map, (player.posY - 1) * MAP_GetMapWidth(map) + player.posX, MAP_ObjMonster);
+		break;
+	case EAST:
+		killed = MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + (player.posX + 1), MAP_ObjMonster);
+		break;
+	case WEST:
+		killed = MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + (player.posX - 1), MAP_ObjMonster);
+		break;
+	}
+	
 	// Update player's energy and points
-	player.energy -= 10;
-	player.points -= 5;
+	if(killed) {
+		player.energy -= 10;
+		player.points -= 5;
+	}
 }
 
 void PLR_CollectHeart(Map *map, Player &player) {
 	// Delete heart from map
-	MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + player.posX, MAP_ObjHeart);
+	if(MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + player.posX, MAP_ObjHeart)) {
+		// Update player's energy and points
+		if(player.energy + 50 < 100)
+			player.energy += 50;
+		else
+			player.energy = 100;
+		player.points -= 10;
 
-	// Update player's energy and points
-	if(player.energy + 50 < 100)
-		player.energy += 50;
-	else
-		player.energy = 100;
-	player.points -= 10;
-
-	// Update player's heart account
-	player.heartsCollected++;
+		// Update player's heart account
+		player.heartsCollected++;
+	}
 }
 
 void PLR_CollectRupee(Map *map, Player &player) {
 	// Delete rupee from map
-	MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + player.posX, MAP_ObjRupee);
-	
-	// Update player's points
-	player.points += 10;
+	if(MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + player.posX, MAP_ObjRupee)) {
+		// Update player's points
+		player.points += 10;
 
-	// Update player's rupee account
-	player.rupeesCollected++;
+		// Update player's rupee account
+		player.rupeesCollected++;
+	}
 }
 
 void PLR_CollectMasterSword(Map *map, Player &player) {
-	// Delete sword from map (whichever it is...)
-	MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + player.posX, MAP_ObjFakeSword);
-	MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + player.posX, MAP_ObjRealSword);
+	bool realSword = MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + player.posX, MAP_ObjRealSword);
+	bool fakeSword = MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + player.posX, MAP_ObjFakeSword);
 	
-	// Update player's points
-	player.points -= 100;
+	// Delete sword from map (whichever it is...)
+	if(fakeSword || realSword) {
+		// Update player's points
+		player.points -= 100;
 
-	// Update player's rupee account
-	player.swordsCollected++;
+		// Update player's rupee account
+		player.swordsCollected++;
+
+		if(realSword)
+			player.realSword = true;
+	}
 }
 
 void PLR_FallIntoHole(Player &player) {
