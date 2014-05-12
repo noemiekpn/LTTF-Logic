@@ -1,15 +1,21 @@
 #ifndef PLAYER_H
 	#define	PLAYER_H 
 
-#include "Sensor.h"
+#include "MapPublicInfo.h"
 
 typedef struct player {
 	int energy;
 	int points;
 
+	bool alive;
+
+	int enemiesKilled;
+	int heartsCollected;
+	int rupeesCollected;
+	int swordsCollected;
+
 	int posX,					// Column, i.e. "j"
 		posY;					// Line, i.e "i"
-	
 	int speedX, speedY;
 
 	int maxFrame;
@@ -30,7 +36,7 @@ typedef struct player {
 	void PLR_InitializePlayer(Player &player);
 
 //------------------------------------------------------------
-//	Increments player's position numSpaces according to his
+//	Increments player's position according to his speed and
 //	direction, animating movement. Also decrements player's 
 //	points by 1.
 //	Facing north:	-y
@@ -40,7 +46,7 @@ typedef struct player {
 //
 //	numSpaces = number of spaces to move
 //------------------------------------------------------------
-	void PLR_MoveForward(Player &player, int numSpaces);
+	void PLR_MoveForward(Map *map, Player &player);
 	
 //------------------------------------------------------------
 //	Changes player direction by "rotating" 90 degrees left.
@@ -58,23 +64,23 @@ typedef struct player {
 //	Decrements player's points by 5 and decrements player's
 //	energy by 10. Monster is always killed.
 //------------------------------------------------------------	
-	void PLR_AttackEnemy(Player &player);
+	void PLR_AttackEnemy(Map *map, Player &player);
 
 //------------------------------------------------------------
 //	Decrements player's points by 10 and increment's player's
 //	energy by 50.
 //------------------------------------------------------------	
-	void PLR_CollectHeart(Player &player);
+	void PLR_CollectHeart(Map *map, Player &player);
 
 //------------------------------------------------------------
 //	Increments player's points by 10.
 //------------------------------------------------------------	
-	void PLR_CollectRupee(Player &player);
+	void PLR_CollectRupee(Map *map, Player &player);
 
 //------------------------------------------------------------
 //	Decrements player's points by 100.
 //------------------------------------------------------------	
-	void PLR_CollectMasterSword(Player &player);
+	void PLR_CollectMasterSword(Map *map, Player &player);
 
 //------------------------------------------------------------
 //	Decrements player's points by 10000.
@@ -82,7 +88,13 @@ typedef struct player {
 	void PLR_FallIntoHole(Player &player);
 
 //------------------------------------------------------------
+//	Teletransports player to random position in map.
+//------------------------------------------------------------	
+	void PLR_FallIntoWarp(Map *map, Player &player);
+
+//------------------------------------------------------------
 //	Decrements player's points by 10000.
 //------------------------------------------------------------	
 	void PLR_BeAttackedByEnemy(Player &player);
+
 #endif	/* PLAYER_H */

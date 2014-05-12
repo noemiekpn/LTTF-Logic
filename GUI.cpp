@@ -48,6 +48,7 @@ typedef struct dynamicImage {
 //------------------------------------------------------------
 	void SetDynamicImage(DynamicImage *img, int maxFrame, int curFrame, int frameCount, int frameDelay, 
 		int frameWidth, int frameHeight, ALLEGRO_BITMAP *image);
+	void DrawInfo(Map *map, Player &player);
 	void DrawMap(Map *map, ALLEGRO_BITMAP *image);
 	void DrawPlayer(Player &player, ALLEGRO_BITMAP *image);
 	void DrawObjects(Map *map);
@@ -82,7 +83,7 @@ void GUI_LoadImages() {
 	if(initAddons) {
 		images[GUI_ImgTitle] = al_load_bitmap("main_title.png");
 		images[GUI_ImgTiles] = al_load_bitmap("lost_woods_tiles.png");
-		images[GUI_ImgLink] = al_load_bitmap("link_DURL.png");
+		images[GUI_ImgLink] = al_load_bitmap("link_DLUR.png");
 		images[GUI_ImgMonster] = al_load_bitmap("hoarder.png");
 		images[GUI_ImgRupee] = al_load_bitmap("rupee.png");
 		images[GUI_ImgHeart]= al_load_bitmap("heart.png");
@@ -163,8 +164,9 @@ void GUI_DrawMainBackground(Map *map, Player &player) {
 	int mapColumns = MAP_GetMapWidth(map);
 
 	DrawMap(map, images[GUI_ImgTiles]);
-	DrawPlayer(player, images[GUI_ImgLink]);
 	DrawObjects(map);
+	DrawPlayer(player, images[GUI_ImgLink]);
+	DrawInfo(map, player);
 
 	// Set player's position to a visited position
 	MAP_SetPositionVisitStatus(map, player.posY * mapColumns + player.posX, true);
@@ -209,6 +211,28 @@ void SetDynamicImage(DynamicImage *img, int maxFrame, int curFrame, int frameCou
 	img->frameHeight = frameHeight;
 	img->image = image;
 }
+
+void DrawInfo(Map *map, Player &player) {
+	al_draw_rounded_rectangle(858, 64, 1185, 283, 10, 10, al_map_rgb(255, 255, 255), 2); 
+	al_draw_rounded_rectangle(858, 394, 1185, 824, 10, 10, al_map_rgb(255, 255, 255), 2);
+
+	al_draw_text(retganon, al_map_rgb(255, 255, 255), 858, 20, ALLEGRO_ALIGN_LEFT, "Link");
+	al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 82, ALLEGRO_ALIGN_CENTER, "- ENERGY -");
+	al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 132, ALLEGRO_ALIGN_CENTER, "%d of 100", player.energy);
+	al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 188, ALLEGRO_ALIGN_CENTER, "- COST -");
+	al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 231, ALLEGRO_ALIGN_CENTER, "%d", player.points);
+
+	al_draw_text(retganon, al_map_rgb(255, 255, 255), 858, 354, ALLEGRO_ALIGN_LEFT, "Map");
+	al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 411, ALLEGRO_ALIGN_CENTER, "- HOARDERS -");
+	al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 458, ALLEGRO_ALIGN_CENTER, "%d of %d", player.enemiesKilled, MAP_GetMapObjectAmount(map, MAP_ObjMonster));
+	al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 515, ALLEGRO_ALIGN_CENTER, "- HEARTS -");
+	al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 560, ALLEGRO_ALIGN_CENTER, "%d of %d", player.heartsCollected, MAP_GetMapObjectAmount(map, MAP_ObjHeart));
+	al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 618, ALLEGRO_ALIGN_CENTER, "- RUPEES -");
+	al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 667, ALLEGRO_ALIGN_CENTER, "%d of %d", player.rupeesCollected, MAP_GetMapObjectAmount(map, MAP_ObjRupee));
+	al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 720, ALLEGRO_ALIGN_CENTER, "- SWORDS -");
+	al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 768, ALLEGRO_ALIGN_CENTER, "%d of %d", player.swordsCollected, 
+		MAP_GetMapObjectAmount(map, MAP_ObjFakeSword) + MAP_GetMapObjectAmount(map, MAP_ObjRealSword));
+} 
 
 void DrawMap(Map *map, ALLEGRO_BITMAP *image) {
 	int size = MAP_GetMapWidth(map) * MAP_GetMapHeight(map);

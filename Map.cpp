@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "Map.h"
+#include "MapPublicInfo.h"
+#include "MapPrivateInfo.h"
+#include "MapSettings.h"
 
 #define MAX_OBJS 4
 
@@ -35,6 +37,8 @@ struct map {
 	void DisplayMapInfo(Map *map);
 	bool AllowObjectsCombination(int object1, int object2);
 	int ConvertType(char type);
+	int SearchPositionObject(Map *map, int pos, int object);
+	int SearchMapObject(Map *map, int object);
 
 Map *MAP_LoadMap(char * fileName) {
 	Map *map;
@@ -240,9 +244,10 @@ void MAP_LoadObjects(Map *map, char *fileName) {
 }
 
 void MAP_PlaceObjects(Map *map, char *fileName) {
-	int x, y;	// Object's coordinates from file 
-	char type;	// Object's type from tile
-	
+	int x, y;		// Object's coordinates from file 
+	char type;		// Object's type from tile
+	int total = 0;	// Total of objects placed
+
 	FILE *f;
 	f = fopen(fileName, "r");
         
@@ -250,22 +255,46 @@ void MAP_PlaceObjects(Map *map, char *fileName) {
         printf("ERROR: File not found.\n");
     }
 
-	int i = 0;
 	int mapColumns = map->width;
 
 	while(fscanf(f, "%d %d %c\n", &x, &y, &type) == 3) {
-		printf("Place object type %c on (%d, %d)\n", type, x, y);
-		map->numObjects++;
-	
-		map->positions[y * mapColumns + x].numObjs++;
-		map->positions[y * mapColumns + x].objs[i] = ConvertType(type);
-		i++;
+		/*printf("Place object type %c on (%d, %d)\n", type, x, y);*/
+		
+		// If this position is grass...
+			if(map->positions[y * mapColumns + x].terrain == MAP_TileGrass) {	
+			// If position is empty, no restrictions
+			if(map->positions[y * mapColumns + x].numObjs == 0) {
+				map->positions[y * mapColumns + x].objs[0] = ConvertType(type);
+				map->positions[y * mapColumns + x].numObjs++;
+				total++;
+			}
+
+			// If position is occupied...
+			else {
+				// ... check if the combination of objects is possible 
+				bool allow = true;
+				for(int k = 0; k < map->positions[y * mapColumns + x].numObjs; k++) {
+					if(!AllowObjectsCombination(map->positions[y * mapColumns + x].objs[k], ConvertType(type))) {
+						allow = false;
+					}
+				}
+				if(allow) {
+					map->positions[y * mapColumns + x].objs[map->positions[y * mapColumns + x].numObjs + 1] = ConvertType(type);
+					map->positions[y * mapColumns + x].numObjs++;
+					total++;
+				}
+			}
+		}
 	}
+
+	printf("Total of objects placed: %d\n", total);
+
+	fclose(f);
 }
 
 void MAP_PlaceObjectsRandom(Map *map) {
 	int pos;
-	int total = 0;	// To check total of objects placed
+	int total = 0;
 	
 	srand(time(NULL));
 
@@ -333,6 +362,17 @@ int MAP_GetMapHeight(Map *map) {
 	return map->height;
 }
 
+int MAP_GetMapObjectAmount(Map *map, int object) {
+	int objIndex = SearchMapObject(map, object);
+
+	if(objIndex < 0) {
+		printf("Object not found.\n");
+		return -1;
+	} else {
+		return map->objects[objIndex].amount;
+	}
+}
+
 char MAP_GetPositionTerrain(Map *map, int pos) {
 	return map->positions[pos].terrain;
 }
@@ -351,6 +391,32 @@ int MAP_GetPositionNumObjects(Map *map, int pos) {
 
 int *MAP_GetPositionObjects(Map *map, int pos) {
 	return map->positions[pos].objs;
+}
+
+void MAP_DeletePositionObject(Map *map, int pos, int object) {
+	int objIndex = SearchPositionObject(map, pos, object);
+	
+	if(objIndex < 0)
+		printf("Object not found. Deletion not accomplished.\n");
+	else
+		map->positions[pos].objs[objIndex] = -1;
+}
+
+void MAP_GenerateRandomWarpDestiny(Map *map, int *posX, int *posY) {
+	int mapLines = MAP_GetMapWidth(map),
+		mapColumns = MAP_GetMapHeight(map);
+
+	srand(time(NULL));
+	
+	// Generate random position within map
+	*posX = rand() % (mapLines - 1);
+	*posY = rand() % (mapColumns - 1);
+
+	// While position is not grass, keep trying
+	while(MAP_GetPositionTerrain(map, (*posY) * mapLines + (*posX)) != MAP_TileGrass) {
+		*posX = rand() % (mapLines - 1);
+		*posY = rand() % (mapColumns - 1);
+	}
 }
 
 //------------------------------------------------------------
@@ -381,6 +447,7 @@ void DisplayMapInfo(Map *map) {
    	printf("\n\n# OF POINTS: %d\n", points);
 }
 
+/* Checks if two objects can be in the same position */
 bool AllowObjectsCombination(int object1, int object2) {
 	switch(object1) {
 		case MAP_ObjHole:
@@ -452,6 +519,7 @@ bool AllowObjectsCombination(int object1, int object2) {
 	}
 }
 
+/* Converts types from letters to enum types */
 int ConvertType(char type) {
 	switch(type) {
 	case 'B':
@@ -470,3 +538,27 @@ int ConvertType(char type) {
 		return MAP_ObjRupee;
 	}
 };
+
+/* Returns the index of the object in the position objects array */
+int SearchPositionObject(Map *map, int pos, int object) {
+	int index = -1;
+	
+	for(int i = 0; i < map->positions[pos].numObjs; i++) {
+		if(map->positions[pos].objs[i] == object)
+			index = i;
+	}
+
+	return index;
+}
+
+/* Returns the index of the object in the map objects array */
+int SearchMapObject(Map *map, int object) {
+	int index = -1;
+	
+	for(int i = 0; i < map->numTypes; i++) {
+		if(map->objects[i].type == object)
+			index = i;
+	}
+
+	return index;
+}

@@ -7,7 +7,7 @@
 #include <SWI-cpp.h>
 
 #include "GUI.h"
-#include "Map.h"
+#include "MapSettings.h"
 #include "Player.h" 
 
 enum STATES {MAIN, SOLVE, END};
@@ -32,6 +32,8 @@ int main(void) {
 	PLR_InitializePlayer(link);	
 	MAP_LoadObjects(lostWoods, "objects.txt");
 	MAP_PlaceObjectsRandom(lostWoods);
+	/*MAP_PlaceObjects(lostWoods, "items.txt");*/
+
 	//------------------------------------------------------------
 	//	ALLEGRO VARIABLES
 	//------------------------------------------------------------
@@ -78,9 +80,16 @@ int main(void) {
 		if(event.type == ALLEGRO_EVENT_KEY_DOWN) {
 			if(event.keyboard.keycode == ALLEGRO_KEY_ENTER) {
 				state = SOLVE;
-			}
-			else if(event.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+			} else if(event.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
 				endGame = true;
+			} else if(event.keyboard.keycode == ALLEGRO_KEY_LEFT) {
+				PLR_TurnLeft(link);
+			} else if(event.keyboard.keycode == ALLEGRO_KEY_RIGHT) {
+				PLR_TurnRight(link);
+			} else if(event.keyboard.keycode == ALLEGRO_KEY_UP) {
+				PLR_MoveForward(lostWoods, link);
+			} else if(event.keyboard.keycode == ALLEGRO_KEY_C) {
+				PLR_CollectHeart(lostWoods, link);
 			}
 		} /* End of key down if */
 
