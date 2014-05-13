@@ -81,30 +81,181 @@ void PLR_TurnRight(Player &player) {
 	player.points--;
 }
 
-void PLR_AttackEnemy(Map *map, Player &player) {
+void PLR_MoveTo(Map *map, Player &player, int posX, int posY) {
+	Point pi, pf;
+	pi.x = player.posX;
+	pi.y = player.posY;
+	pf.x = posX;
+	pf.y = posY;
+
+	int *path = GPF_FindShortestPath(pf, pi, map);
+	int pathLength = path[0];
+
+	for(int pos = 2; pos < pathLength ; pos += 2) {
+		int dirX = player.posX - path[pos];
+		int dirY = player.posY - path[pos + 1];
+
+		if(dirX > 0) {
+			// Player is moving west
+			switch(player.animationRow) {
+			case SOUTH:
+				PLR_TurnRight(player);
+				break;
+			case NORTH:
+				PLR_TurnLeft(player);
+				break;
+			case EAST:
+				PLR_TurnRight(player);
+				PLR_TurnRight(player);
+				break;
+			case WEST:
+				break;
+			}
+		} else if (dirX < 0) {
+			// Player is moving east
+			switch(player.animationRow) {
+			case SOUTH:
+				PLR_TurnLeft(player);
+				break;
+			case NORTH:
+				PLR_TurnRight(player);
+				break;
+			case EAST:
+				break;
+			case WEST:
+				PLR_TurnLeft(player);
+				PLR_TurnLeft(player);
+				break;
+			}
+		} else {
+			// Player is not moving horizontally...
+			if(dirY > 0) {
+				// Player is moving north
+				switch(player.animationRow) {
+				case SOUTH:
+					PLR_TurnRight(player);
+					PLR_TurnRight(player);
+					break;
+				case NORTH:
+					break;
+				case EAST:
+					PLR_TurnLeft(player);
+					break;
+				case WEST:
+					PLR_TurnRight(player);
+					break;
+				}
+			} else if (dirY < 0) {
+				// Player is moving south
+				switch(player.animationRow) {
+				case SOUTH:
+					break;
+				case NORTH:
+					PLR_TurnRight(player);
+					PLR_TurnRight(player);
+					break;
+				case EAST:
+					PLR_TurnRight(player);
+					break;
+				case WEST:
+					PLR_TurnLeft(player);
+					break;
+				}
+			} else {
+				// Player is not moving vertically...
+			}
+		} /* End of direction if-else */
+
+		PLR_MoveForward(map, player);
+	} /* End of for */
+}
+
+bool PLR_AttackEnemy(Map *map, Player &player, int posX, int posY) {
 	bool killed;
 	
-	// Delete monster from map
-	switch(player.animationRow) {	
-	case SOUTH:
-		killed = MAP_DeletePositionObject(map, (player.posY + 1) * MAP_GetMapWidth(map) + player.posX, MAP_ObjMonster);
-		break;
-	case NORTH:
-		killed = MAP_DeletePositionObject(map, (player.posY - 1) * MAP_GetMapWidth(map) + player.posX, MAP_ObjMonster);
-		break;
-	case EAST:
-		killed = MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + (player.posX + 1), MAP_ObjMonster);
-		break;
-	case WEST:
-		killed = MAP_DeletePositionObject(map, player.posY * MAP_GetMapWidth(map) + (player.posX - 1), MAP_ObjMonster);
-		break;
+	int dirX = player.posX - posX;
+	int dirY = player.posY - posY;
+		
+	if(dirX > 0) {
+		// Monster is at left of player
+		switch(player.animationRow) {
+		case SOUTH:
+			PLR_TurnRight(player);
+			break;
+		case NORTH:
+			PLR_TurnLeft(player);
+			break;
+		case EAST:
+			PLR_TurnRight(player);
+			PLR_TurnRight(player);
+			break;
+		case WEST:
+			break;
+		}
+
+	} else if (dirX < 0) {
+		// Monster is at right of player
+		switch(player.animationRow) {
+		case SOUTH:
+			PLR_TurnLeft(player);
+			break;
+		case NORTH:
+			PLR_TurnRight(player);
+			break;
+		case EAST:
+			break;
+		case WEST:
+			PLR_TurnLeft(player);
+			PLR_TurnLeft(player);
+			break;
+		}
+	} else {
+		// Monster is at same x of player (above or below...)
+		if(dirY > 0) {
+			// Monster is above player
+			switch(player.animationRow) {
+			case SOUTH:
+				PLR_TurnRight(player);
+				PLR_TurnRight(player);
+				break;
+			case NORTH:
+				break;
+			case EAST:
+				PLR_TurnLeft(player);
+				break;
+			case WEST:
+				PLR_TurnRight(player);
+				break;
+			}
+		} else if (dirY < 0) {
+			// Monster is below player
+			switch(player.animationRow) {
+			case SOUTH:
+				break;
+			case NORTH:
+				PLR_TurnRight(player);
+				PLR_TurnRight(player);
+				break;
+			case EAST:
+				PLR_TurnRight(player);
+				break;
+			case WEST:
+				PLR_TurnLeft(player);
+				break;
+			}
+		} else {
+			// Monster is at same position of player
+			PLR_BeAttackedByEnemy(player);
+		}
 	}
+
+	killed = MAP_DeletePositionObject(map, posY * MAP_GetMapWidth(map) + posX, MAP_ObjMonster);
 	
 	// Update player's energy and points
-	if(killed) {
-		player.energy -= 10;
-		player.points -= 5;
-	}
+	player.energy -= 10;
+	player.points -= 5;
+
+	return killed;
 }
 
 void PLR_CollectHeart(Map *map, Player &player) {
