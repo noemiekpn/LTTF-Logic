@@ -2,7 +2,6 @@
 	#define	PLAYER_H 
 
 #include "MapPublicInfo.h"
-#include "GraphPathFinder.h"
 
 typedef struct player {
 	int energy;
@@ -70,7 +69,7 @@ typedef struct player {
 
 //------------------------------------------------------------
 //	Decrements player's points by 5 and decrements player's
-//	energy by 10. Monster is killed=true, if not found then false. Assumes adjacent
+//	energy by 10. Monster is always killed. Assumes adjacent
 //	monster position.
 //
 //	posX = Coordinate x of position to attack

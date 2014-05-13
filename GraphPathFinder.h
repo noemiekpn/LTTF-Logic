@@ -2,7 +2,6 @@
 	#define	GRAPHPATHFINDER_H    
 
 	#include "MapPublicInfo.h"
-	#include "MapPrivateInfo.h"
 
 	typedef struct point {
 		int x;

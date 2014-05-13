@@ -26,7 +26,7 @@
 //	Deletes an object (from MAP_Objs) from position array.
 //	If object is not found, no deletion is made.
 //------------------------------------------------------------
-	void MAP_DeletePositionObject(Map *map, int pos, int object);
+	bool MAP_DeletePositionObject(Map *map, int pos, int object);
 
 //------------------------------------------------------------
 //	Generates a random new position the warp object will send

@@ -1,6 +1,8 @@
 ﻿#include <stdio.h>
 #include <stdlib.h>
+
 #include "GraphPathFinder.h"
+#include "MapPrivateInfo.h"
 
 #define MAX 2000
 
@@ -30,7 +32,7 @@ typedef struct mark{
 	void InitializeMarks(Mark *mark, int column);
 	int ManhattanModulus(int x, int y, int z, int w);
 
-int *GPF_FindShortestPath(Point start, Point end, Map *map, int mode){ 
+int *GPF_FindShortestPath(Point start, Point end, Map *map){ 
 	int line = MAP_GetMapHeight(map);
 	
 	bool arrived = 0;			// Escape from main loop

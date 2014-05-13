@@ -23,9 +23,20 @@
 	void MAP_SetPositionVisitStatus(Map *map, int pos, bool status);
 
 //------------------------------------------------------------
+//	Gets safety status of map position.
+//------------------------------------------------------------
+	bool MAP_GetPositionSafetyStatus(Map *map, int pos);
+
+//------------------------------------------------------------
 //	Returns number of objects in a position.
 //------------------------------------------------------------
 	int MAP_GetPositionNumObjects(Map *map, int pos);
+
+//------------------------------------------------------------
+//	Returns the index of the object in the position objects
+//	array. If not found, returns -1.
+//------------------------------------------------------------
+	int MAP_SearchPositionObject(Map *map, int pos, int object);
 
 //------------------------------------------------------------
 //	Returns array of objects in a position, from MAP_Objs.

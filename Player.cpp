@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
 #include "Player.h"
+#include "GraphPathFinder.h"
 
 #define PLR_SIZE 20
 
