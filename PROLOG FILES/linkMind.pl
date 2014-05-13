@@ -1805,6 +1805,7 @@ allAdjacent(THIS,A,_,C,D):-adjacent(A,THIS), adjacent(C,THIS),adjacent(D,THIS),A
 allAdjacent(THIS,A,_,C,_):-adjacent(A,THIS), adjacent(C,THIS),A\=C.
 %------Inside------%
 :-dynamic hasdistortion/1.
+:-dynamic hasnoise/1.
 :-dynamic fairy/1.
 :-dynamic hasbreeze/1.
 :-dynamic brightness/1.
@@ -1817,17 +1818,17 @@ allAdjacent(THIS,A,_,C,_):-adjacent(A,THIS), adjacent(C,THIS),A\=C.
 :-dynamic pending/1.
 %Important Sets 
 setWood(THIS):- assert(wood(THIS)).
-setPending(THIS):- not(visited(THIS)),(pending(THIS);assert(pending(THIS))). %add (pending();) to avoid repetition
+setPending(THIS):- (not(visited(THIS)),(pending(THIS);assert(pending(THIS))));true. %add (pending();) to avoid repetition
+setSafe(THIS):- (not(wood(THIS)),(safe(THIS);assert(safe(THIS))));true.
 
 %Perceptions
-setSafe(THIS):- not(wood(THIS)),(safe(THIS);assert(safe(THIS))).
 setFairy(THIS):- assert(fairy(THIS)).
 setRbrightness(THIS):- assert(rupeebrightness(THIS)).
 setBrightness(THIS):- assert(brightness(THIS)).
 setNoise(THIS):- assert(hasnoise(THIS)).
 setDistortion(THIS):- assert(hasdistortion(THIS)).
 setBreeze(THIS):- assert(hasbreeze(THIS)).
-noSense(THIS):- allAdjacent(THIS,A,B,C,D),setSafe(A),setSafe(B),setSafe(C),setSafe(D).
+noSense(THIS):- link(THIS),(not(hasdistortion(THIS)),not(hasbreeze(THIS)),not(hasnoise(THIS))),allAdjacent(THIS,A,B,C,D),setSafe(A),setPending(A),setSafe(B),setPending(B),setSafe(C),setPending(C),setSafe(D),setPending(D).
 
 %About monster
 cantHaveMonster(THIS):- wood(THIS);safe(THIS);not(THIS).% ;vortex(THIS);hole(THIS) Can generate infinite loop
@@ -1869,6 +1870,7 @@ best_action(walk(X)):- energy(Y),Y=10, heart(X).
 
 
 %Explore with safety
+best_action(walk(X)):- link(Y),noSense(Y),pending(X), safe(X),adjacent(Y,X).%Explore the World 1 tile close
 best_action(walk(X)):- pending(X), safe(X),link(Y),adjacent(Y,X). %Explore the World 1 tile close
 best_action(walk(X)):- pending(X), safe(X). %Explore the World far
 
