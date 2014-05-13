@@ -33,8 +33,8 @@
 //	to. New position can be in any grass terrain of map.
 //------------------------------------------------------------
 	void MAP_GenerateRandomWarpDestiny(Map *map, int *posX, int *posY); 
-//------------------------------------------------------------
-//	Search for a Object at a given position
-//------------------------------------------------------------
-	int MAP_SearchPositionObject(Map *map, int pos, int object);
+
+
+	void MAP_SetPositionSafetyStatus(Map *map, int pos, bool status);
+
 #endif	/* MAPPUBLIC_H */

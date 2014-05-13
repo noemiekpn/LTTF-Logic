@@ -8,7 +8,7 @@
 
 #include "GUI.h"
 
-#define NUM_IMGS 9
+#define NUM_IMGS 10
 #define MAP_SIZE 42
 
 /**
@@ -18,8 +18,8 @@
   * 3. Pendants image corresponds to Pendant of Courage (green), Pendant of Power (blue) and Pendant of Wisdom (red), in this order
   */
 typedef enum {
-	GUI_ImgTitle, GUI_ImgTiles, GUI_ImgLink, GUI_ImgMonster, 
-	GUI_ImgRupee, GUI_ImgHeart, GUI_ImgSwords, GUI_ImgPedestal, GUI_ImgDeadLink
+	GUI_ImgTitle, GUI_ImgTiles, GUI_ImgLink, GUI_ImgMonster, GUI_ImgRupee, 
+	GUI_ImgHeart, GUI_ImgSwords, GUI_ImgPedestal, GUI_ImgDeadLink, GUI_ImgLostWoods
 } GUI_Img;
 
 typedef struct dynamicImage {
@@ -90,6 +90,7 @@ void GUI_LoadImages() {
 		images[GUI_ImgSwords]= al_load_bitmap("swords.png");
 		images[GUI_ImgPedestal] = al_load_bitmap("pedestal.png");
 		images[GUI_ImgDeadLink] = al_load_bitmap("dead_link.png");
+		images[GUI_ImgLostWoods] = al_load_bitmap("lost_woods.png");
 
 		// Mask out background
 		al_convert_mask_to_alpha(images[GUI_ImgLink], al_map_rgb(0, 128, 128));			// Cyan
@@ -199,6 +200,10 @@ void GUI_DrawEndResults(Player &player) {
 			al_draw_text(retganon, al_map_rgb(255, 255, 255), 480, 400, ALLEGRO_ALIGN_LEFT, "that you won the master sword");
 			al_draw_text(retganon, al_map_rgb(255, 255, 255), 480, 452, ALLEGRO_ALIGN_LEFT, "that makes evil retreat...");
 			al_draw_textf(retganon, al_map_rgb(255, 255, 255), 480, 660, ALLEGRO_ALIGN_LEFT, "Final score: %d", player.points);
+		} else {
+			al_draw_bitmap(images[GUI_ImgLostWoods], 0, 130, 0);
+			al_draw_text(retganon, al_map_rgb(255, 255, 255), 600, 45, ALLEGRO_ALIGN_CENTER, "Link seems to be lost in Lost Woods... Oh, the irony.");
+			al_draw_textf(retganon, al_map_rgb(255, 255, 255), 600, 745, ALLEGRO_ALIGN_CENTER, "Final score: %d", player.points);
 		}
 
 	} else {
@@ -244,7 +249,7 @@ void DrawInfo(Map *map, Player &player) {
 		al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 188, ALLEGRO_ALIGN_CENTER, "- COST -");
 		al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 231, ALLEGRO_ALIGN_CENTER, "%d", player.points);
 
-		al_draw_text(retganon, al_map_rgb(255, 255, 255), 858, 354, ALLEGRO_ALIGN_LEFT, "Map");
+		al_draw_text(retganon, al_map_rgb(255, 255, 255), 858, 350, ALLEGRO_ALIGN_LEFT, "Map");
 		al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 411, ALLEGRO_ALIGN_CENTER, "- HOARDERS -");
 		al_draw_textf(retganon, al_map_rgb(255, 255, 255), 1022, 458, ALLEGRO_ALIGN_CENTER, "%d of %d", player.enemiesKilled, MAP_GetMapObjectAmount(map, MAP_ObjMonster));
 		al_draw_text(retganon, al_map_rgb(255, 255, 255), 1022, 515, ALLEGRO_ALIGN_CENTER, "- HEARTS -");

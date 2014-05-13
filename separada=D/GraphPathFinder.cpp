@@ -1,6 +1,8 @@
 ﻿#include <stdio.h>
 #include <stdlib.h>
+
 #include "GraphPathFinder.h"
+#include "MapPrivateInfo.h"
 
 #define MAX 2000
 
@@ -30,10 +32,10 @@ typedef struct mark{
 	void InitializeMarks(Mark *mark, int column);
 	int ManhattanModulus(int x, int y, int z, int w);
 
-int *GPF_FindShortestPath(Point start, Point end, Map *map, int mode){ 
+int *GPF_FindShortestPath(Point start, Point end, Map *map){ 
 	int line = MAP_GetMapHeight(map);
 	
-	bool arrived = 0;			// Escape from main loop
+	bool arrived = false;			// Escape from main loop
 	int memoryLimit = MAX;
 
 	int smallest = 0,			// Smallest accumulated cost
@@ -41,7 +43,7 @@ int *GPF_FindShortestPath(Point start, Point end, Map *map, int mode){
 		smallestIndex = 0;
 	bool reachedLimit = false;
 
-	int x, y,					// x and y of current node		
+	int x=0, y=0,					// x and y of current node		
 		total;					// Total sum from current position to end
 	
 	int numExpansions = 1;
@@ -62,7 +64,7 @@ int *GPF_FindShortestPath(Point start, Point end, Map *map, int mode){
 	memNode[0].previous = NULL;
 	memNode[0].modulus = ManhattanModulus(start.x, start.y, end.x, end.y);
 	memNode[0].function = memNode[0].modulus;
-
+	printf("\n x_%d,y_%d,z_%d,w_%d, \n",start.x, start.y, end.x, end.y);
 	dueNodes[0] = &memNode[0];
 	
 	// Iteration to find best path to goal
@@ -73,17 +75,20 @@ int *GPF_FindShortestPath(Point start, Point end, Map *map, int mode){
 	 	}
         
 		// Decides for smallest cost node
-        for(int i = inferiorLimit; i < numExpansions; i++) {
+		smallest=0;
+		reachedLimit=false;
+		for(int i = 0; i < numExpansions; i++) {
  			// Items which have already been removed
 			if(dueNodes[i] != NULL) { 
 				reachedLimit = true;
 				if (smallest == 0) {
 					smallest = dueNodes[i]->function;
-					/* printf("Smallest:%d\ti: %d\n", smallest, i); */
+					//printf("Smallest:%d\ti: %d\n", smallest, i); 
 					smallestIndex = i;
  				} else if ((dueNodes[i]->function) < smallest) {
 	                smallest = dueNodes[i]->function;
 	                smallestIndex = i;
+					//printf("Smallest:%d\ti: %d\n", smallest, i); 
 	            }
 			} else {
 				if(!reachedLimit) {
@@ -91,11 +96,11 @@ int *GPF_FindShortestPath(Point start, Point end, Map *map, int mode){
 				}
 			}
         }
-
+	//	printf("\n\n\t Madei um OI!");
 		// Checks if every node has been expanded
 		if(dueNodes[smallestIndex] == NULL){
-			printf("Goal not found. Expansion index: %d\tPoint: (%d, %d)\n", smallestIndex, numExpansions, x, y);
-			
+			printf("\nGoal not found. Expansion index: %d\tPoint: (%d, %d)\n", smallestIndex, numExpansions, x, y);
+			//exit(1);
 			for(int i = 0; i < numExpansions; i++){
 				if(dueNodes[i] != NULL)
 					printf("Position: %d\tCost: %d\tPoint: (%d, %d)", i, dueNodes[i]->sumCost, dueNodes[i]->x, dueNodes[i]->y);
@@ -106,7 +111,7 @@ int *GPF_FindShortestPath(Point start, Point end, Map *map, int mode){
 		// Expanding adjacent nodes...
 		x = dueNodes[smallestIndex]->x + 1;	// Starts with left adjacent node
 		y = dueNodes[smallestIndex]->y;
- 		
+
 		int numAdjacents = 4;
 
 		while(numAdjacents--) {
@@ -127,12 +132,13 @@ int *GPF_FindShortestPath(Point start, Point end, Map *map, int mode){
  				printf("ERROR: Unexpected error in number of adjacent nodes.\n");
  				return NULL;
  			}
-
+		//	printf("\n xxxx_%d, yyyy_%d\n",x,y);
 			// Within map boundaries...
 			if((x >= 0) && (x < line) && (y < line) && (y >= 0)) {
-
+			//	printf("\n PASSEI!\n");
 				// If node has not been analysed and map position is safe
-				if(!visited[x * line + y].closed && MAP_GetPositionSafetyStatus(map, x * line + y)) { 
+				if(!visited[x * line + y].closed && MAP_GetPositionSafetyStatus(map, y* line + x)) { 
+					//printf("\n UUHLLL EH SAFE!\n");
 					
 					// If node has not been visited...
 					if(!visited[x * line + y].marked){ 
@@ -157,6 +163,7 @@ int *GPF_FindShortestPath(Point start, Point end, Map *map, int mode){
 						// Check if x and y are end point coordinates
 						if(end.x == x && end.y == y){
 							arrived = true;
+							//break;
 						}
 					} /* End of not visited if */
 					// If node has been visited...
@@ -172,7 +179,30 @@ int *GPF_FindShortestPath(Point start, Point end, Map *map, int mode){
 							visited[x * line + y].where->previous = dueNodes[smallestIndex];
 						}
 					} 
-				} /* End of not analysed and is an option if */
+				} /* End of is walkable node if */
+
+				/*If is not close_visited, not walkable, maybe is destiny*/
+				else if ((end.x==x && end.y==y )){
+					printf("\nFor the HONOR!");
+						// Make expansion!
+						numExpansions++;
+						memoryLimit--;
+						
+						// Put node in line of expansion and analysis
+						dueNodes[numExpansions - 1] = &memNode[numExpansions - 1];
+						dueNodes[numExpansions - 1]->x = x;
+						dueNodes[numExpansions - 1]->y = y;
+						dueNodes[numExpansions - 1]->sumCost = dueNodes[smallestIndex]->sumCost + 1;
+						dueNodes[numExpansions - 1]->modulus = ManhattanModulus(x, y, end.x, end.y);
+						dueNodes[numExpansions - 1]->function = dueNodes[numExpansions - 1]->sumCost + dueNodes[numExpansions - 1]->modulus;
+						dueNodes[numExpansions - 1]->previous = dueNodes[smallestIndex];
+						dueNodes[numExpansions - 1]->step = dueNodes[smallestIndex]->step + 1;
+
+						// Index and control visited nodes
+						visited[x * line + y].marked = true;
+						visited[x * line + y].where = dueNodes[numExpansions - 1];
+				}/*End of if is not close_visited, not walkable, maybe is destiny*/
+
 			} /* End of boundaries if */
  		} /* End of numAdjacents while */
  		

@@ -18,6 +18,7 @@ typedef struct position {
 	char terrain;			// Type of terrain
 	int objs[MAX_OBJS];		// Array of object types in this position
 	bool visited;			// If position has been visited
+	bool safe;				// If position is safe
 } Position; 
 
 struct map {
@@ -100,12 +101,14 @@ Map *MAP_LoadMap(char * fileName) {
 		case 'f': // Forest
 			map->positions[(i*map->width) + j].terrain = MAP_TileForest;
 			map->positions[(i*map->width) + j].visited = false;
+			map->positions[(i*map->width) + j].safe = false;
 			map->positions[(i*map->width) + j].numObjs = 0;
 			j++;
 			break;
 		case 'g': // Grass
 			map->positions[(i*map->width) + j].terrain = MAP_TileGrass;
 			map->positions[(i*map->width) + j].visited = false;
+			map->positions[(i*map->width) + j].safe = false;
 			map->positions[(i*map->width) + j].numObjs = 0;
 			j++;
 			break;
@@ -256,7 +259,7 @@ void MAP_PlaceObjects(Map *map, char *fileName) {
 
 	int mapColumns = map->width;
 
-	while(fscanf(f, "%d %d %c\n", &x, &y, &type) == 3) {
+	while(fscanf(f, "%d %d %c\n", &y, &x, &type) == 3) {
 		/*printf("Place object type %c on (%d, %d)\n", type, x, y);*/
 		
 		// If this position is grass...
@@ -384,12 +387,27 @@ void MAP_SetPositionVisitStatus(Map *map, int pos, bool status) {
 	map->positions[pos].visited = status;
 }
 
+bool MAP_GetPositionSafetyStatus(Map *map, int pos) {
+	return map->positions[pos].safe;
+}
+
 int MAP_GetPositionNumObjects(Map *map, int pos) {
 	return map->positions[pos].numObjs;
 }
 
 int *MAP_GetPositionObjects(Map *map, int pos) {
 	return map->positions[pos].objs;
+}
+
+int MAP_SearchPositionObject(Map *map, int pos, int object) {
+	int index = -1;
+	
+	for(int i = 0; i < map->positions[pos].numObjs; i++) {
+		if(map->positions[pos].objs[i] == object)
+			index = i;
+	}
+
+	return index;
 }
 
 bool MAP_DeletePositionObject(Map *map, int pos, int object) {
@@ -419,6 +437,10 @@ void MAP_GenerateRandomWarpDestiny(Map *map, int *posX, int *posY) {
 		*posX = rand() % (mapLines - 1);
 		*posY = rand() % (mapColumns - 1);
 	}
+}
+
+void MAP_SetPositionSafetyStatus(Map *map, int pos, bool status) {
+       map->positions[pos].safe = status;
 }
 
 //------------------------------------------------------------
@@ -540,18 +562,6 @@ int ConvertType(char type) {
 		return MAP_ObjRupee;
 	}
 };
-
-/* Returns the index of the object in the position objects array */
-int MAP_SearchPositionObject(Map *map, int pos, int object) {
-	int index = -1;
-	
-	for(int i = 0; i < map->positions[pos].numObjs; i++) {
-		if(map->positions[pos].objs[i] == object)
-			index = i;
-	}
-
-	return index;
-}
 
 /* Returns the index of the object in the map objects array */
 int SearchMapObject(Map *map, int object) {
