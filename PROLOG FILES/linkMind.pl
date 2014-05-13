@@ -1767,7 +1767,6 @@ hasnoise(point(10,8)).
 %---------------------------------------------------------%
 % RULES
 %---------------------------------------------------------%
-
 %---------------------------------------%
 % About Link
 
@@ -1825,8 +1824,9 @@ setPending(THIS):- not(visited(THIS)),(pending(THIS);assert(pending(THIS))). %ad
 setSafe(THIS):- not(wood(THIS)),(safe(THIS);assert(safe(THIS))).
 setFairy(THIS):- assert(fairy(THIS)).
 setRbrightness(THIS):- assert(rupeebrightness(THIS)).
+setBrightness(THIS):- assert(brightness(THIS)).
 setNoise(THIS):- assert(hasnoise(THIS)).
-setDistortion(THIS):- assert(hasnoise(THIS)).
+setDistortion(THIS):- assert(hasdistortion(THIS)).
 setBreeze(THIS):- assert(hasbreeze(THIS)).
 noSense(THIS):- allAdjacent(THIS,A,B,C,D),setSafe(A),setSafe(B),setSafe(C),setSafe(D).
 
@@ -1873,7 +1873,8 @@ best_action(walk(X)):- energy(Y),Y=10, heart(X).
 best_action(walk(X)):- pending(X), safe(X),link(Y),adjacent(Y,X). %Explore the World 1 tile close
 best_action(walk(X)):- pending(X), safe(X). %Explore the World far
 
-%Know monster and no where safe not visited to go
+%Monster known and no where safe not visited to go
+best_action(attackMonster(X)):- link(Y), adjacent(X,Y),monster(X),energy(E),E>10.
 best_action(walk(X)):- monster(Y), adjacent(X,Y), safe(X), energy(E),E>10.
 
 
@@ -1893,4 +1894,5 @@ inHole(THIS):- link(THIS), assert(hole(THIS)),retract(alive(link)).
 inVortex(THIS,GO):- link(THIS), assert(vortex(THIS)),assert(link(GO)).
 withMonster(THIS):- link(THIS),assert(monster(THIS)),retract(alive(link)).
 realSword(THIS):- link(THIS),assert(won(game)).
-killedMonster(THIS):- assert(monsterKilled(THIS)),setSafe(THIS),setPending(THIS) .
+killedMonster(THIS):- assert(monsterKilled(THIS)),setSafe(THIS),setPending(THIS).
+notKilledMonster(THIS):-setSafe(THIS),setPending(THIS).
